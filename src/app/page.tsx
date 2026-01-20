@@ -1145,81 +1145,83 @@ export default function CanicrossApp() {
               <Trophy className="w-8 h-8 text-green-600" />
               {currentWeeklySummary?.isRepeat ? "Repetição Concluída! 🎉" : `Resumo da Semana ${currentWeeklySummary?.weekNumber} 🎉`}
             </DialogTitle>
-            <DialogDescription className="text-base text-green-800 mt-4">
-              {currentWeeklySummary && (
-                <div className="space-y-4">
-                  <div className="font-semibold text-lg">
-                    {currentWeeklySummary.isRepeat 
-                      ? `Parabéns! Você completou a segunda rodada dos treinos!`
-                      : `Parabéns! Você concluiu ${currentWeeklySummary.completedWorkouts} treinos essa semana!`
-                    }
-                  </div>
-                  
-                  <div className="bg-white p-4 rounded-lg border-2 border-green-300">
-                    <div className="text-sm text-gray-700 mb-2">
-                      <strong>⏱️ Tempo total:</strong> {currentWeeklySummary.totalTime} minutos
+            <DialogDescription asChild>
+              <div className="text-base text-green-800 mt-4">
+                {currentWeeklySummary && (
+                  <div className="space-y-4">
+                    <div className="font-semibold text-lg">
+                      {currentWeeklySummary.isRepeat 
+                        ? `Parabéns! Você completou a segunda rodada dos treinos!`
+                        : `Parabéns! Você concluiu ${currentWeeklySummary.completedWorkouts} treinos essa semana!`
+                      }
                     </div>
-                    <div className="text-sm text-gray-700 mb-2">
-                      <strong>🏃 Treinos realizados:</strong>
-                    </div>
-                    <ul className="text-xs text-gray-600 ml-4 space-y-1">
-                      {currentWeeklySummary.workoutTypes.map((type, idx) => (
-                        <li key={idx}>• {type}</li>
-                      ))}
-                    </ul>
-                  </div>
-                  
-                  <div className="text-base font-semibold text-green-900">
-                    Você deu um grande passo na evolução com seu cachorro! 🐕💙
-                  </div>
-                  
-                  {userLevel === "Intermediário" && !currentWeeklySummary.isRepeat && (
-                    <div className="bg-gradient-to-r from-blue-100 to-cyan-100 p-4 rounded-lg border-2 border-blue-400">
-                      <div className="text-sm font-bold text-blue-900 flex items-center gap-2">
-                        <CheckCircle2 className="w-5 h-5" />
-                        Agora repita os mesmos treinos na segunda semana!
+                    
+                    <div className="bg-white p-4 rounded-lg border-2 border-green-300">
+                      <div className="text-sm text-gray-700 mb-2">
+                        <strong>⏱️ Tempo total:</strong> {currentWeeklySummary.totalTime} minutos
                       </div>
-                    </div>
-                  )}
-                  
-                  {userLevel === "Intermediário" && currentWeeklySummary.isRepeat && (
-                    <div className="bg-gradient-to-r from-green-100 to-emerald-100 p-4 rounded-lg border-2 border-green-400">
-                      <div className="text-sm font-bold text-green-900 flex items-center gap-2">
-                        <CheckCircle2 className="w-5 h-5" />
-                        Bloco completo! Próximo bloco desbloqueado!
+                      <div className="text-sm text-gray-700 mb-2">
+                        <strong>🏃 Treinos realizados:</strong>
                       </div>
+                      <ul className="text-xs text-gray-600 ml-4 space-y-1">
+                        {currentWeeklySummary.workoutTypes.map((type, idx) => (
+                          <li key={idx}>• {type}</li>
+                        ))}
+                      </ul>
                     </div>
-                  )}
-                  
-                  {userLevel !== "Intermediário" && currentWeeklySummary.weekNumber < 4 && (
-                    <div className="bg-gradient-to-r from-green-100 to-emerald-100 p-4 rounded-lg border-2 border-green-400">
-                      <div className="text-sm font-bold text-green-900 flex items-center gap-2">
-                        <CheckCircle2 className="w-5 h-5" />
-                        A próxima semana já está liberada!
-                      </div>
+                    
+                    <div className="text-base font-semibold text-green-900">
+                      Você deu um grande passo na evolução com seu cachorro! 🐕💙
                     </div>
-                  )}
-                  
-                  {isCurrentLevelComplete() && (
-                    <div className="bg-gradient-to-r from-yellow-100 to-amber-100 p-4 rounded-lg border-2 border-yellow-400">
-                      <div className="text-sm font-bold text-yellow-900 flex items-center gap-2">
-                        <Trophy className="w-5 h-5" />
-                        Parabéns! Você concluiu o nível {userLevel}!
-                      </div>
-                      {userLevel === "Iniciante" && (
-                        <div className="text-xs text-yellow-800 mt-2">
-                          O nível Intermediário foi desbloqueado!
+                    
+                    {userLevel === "Intermediário" && !currentWeeklySummary.isRepeat && (
+                      <div className="bg-gradient-to-r from-blue-100 to-cyan-100 p-4 rounded-lg border-2 border-blue-400">
+                        <div className="text-sm font-bold text-blue-900 flex items-center gap-2">
+                          <CheckCircle2 className="w-5 h-5" />
+                          Agora repita os mesmos treinos na segunda semana!
                         </div>
-                      )}
-                      {userLevel === "Intermediário" && (
-                        <div className="text-xs text-yellow-800 mt-2">
-                          O nível Avançado foi desbloqueado!
+                      </div>
+                    )}
+                    
+                    {userLevel === "Intermediário" && currentWeeklySummary.isRepeat && (
+                      <div className="bg-gradient-to-r from-green-100 to-emerald-100 p-4 rounded-lg border-2 border-green-400">
+                        <div className="text-sm font-bold text-green-900 flex items-center gap-2">
+                          <CheckCircle2 className="w-5 h-5" />
+                          Bloco completo! Próximo bloco desbloqueado!
                         </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
+                      </div>
+                    )}
+                    
+                    {userLevel !== "Intermediário" && currentWeeklySummary.weekNumber < 4 && (
+                      <div className="bg-gradient-to-r from-green-100 to-emerald-100 p-4 rounded-lg border-2 border-green-400">
+                        <div className="text-sm font-bold text-green-900 flex items-center gap-2">
+                          <CheckCircle2 className="w-5 h-5" />
+                          A próxima semana já está liberada!
+                        </div>
+                      </div>
+                    )}
+                    
+                    {isCurrentLevelComplete() && (
+                      <div className="bg-gradient-to-r from-yellow-100 to-amber-100 p-4 rounded-lg border-2 border-yellow-400">
+                        <div className="text-sm font-bold text-yellow-900 flex items-center gap-2">
+                          <Trophy className="w-5 h-5" />
+                          Parabéns! Você concluiu o nível {userLevel}!
+                        </div>
+                        {userLevel === "Iniciante" && (
+                          <div className="text-xs text-yellow-800 mt-2">
+                            O nível Intermediário foi desbloqueado!
+                          </div>
+                        )}
+                        {userLevel === "Intermediário" && (
+                          <div className="text-xs text-yellow-800 mt-2">
+                            O nível Avançado foi desbloqueado!
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             </DialogDescription>
           </DialogHeader>
           <div className="flex justify-center mt-4">
