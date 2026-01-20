@@ -524,20 +524,20 @@ export default function CanicrossApp() {
       difficulty: "Iniciante",
       completed: false
     },
-    // NÍVEL INTERMEDIÁRIO - Semanas 1 e 2 (mesmo treino, repetido)
+    // NÍVEL INTERMEDIÁRIO - Semanas 1 e 2 (Construção de Ritmo e Força)
     {
       id: "int-1-1",
       week: 1,
       day: 1,
       category: "A",
-      title: "Corrida Base com Tração",
-      description: "Corrida contínua com tração moderada",
-      duration: "35 min",
-      objective: "Desenvolver resistência aeróbica",
+      title: "Endurance (35–45 min)",
+      description: "Corrida contínua em intensidade moderada",
+      duration: "35-45 min",
+      objective: "Aumentar a resistência do cão e sua capacidade aeróbica",
       details: [
-        "5 min aquecimento",
-        "25 min corrida com tração constante",
-        "5 min desaquecimento"
+        "10 min trote leve (aquecimento)",
+        "20–25 min corrida contínua em intensidade moderada",
+        "5–10 min caminhada e trote leve"
       ],
       difficulty: "Intermediário",
       completed: false,
@@ -566,14 +566,15 @@ export default function CanicrossApp() {
       week: 1,
       day: 3,
       category: "B",
-      title: "Intervalado de Velocidade",
-      description: "Treino de velocidade com intervalos",
-      duration: "30 min",
-      objective: "Melhorar velocidade e potência",
+      title: "Intervalado de Força (25–30 min)",
+      description: "Treino de força com tração intensa",
+      duration: "25-30 min",
+      objective: "Melhorar potência e tração",
       details: [
         "10 min aquecimento",
-        "8x (1 min rápido + 1 min recuperação)",
-        "6 min desaquecimento"
+        "6 a 8 tiros de 45 segundos puxando forte",
+        "Intervalo de 1 min caminhando entre os tiros",
+        "5 min desaceleração"
       ],
       difficulty: "Intermediário",
       completed: false,
@@ -602,14 +603,15 @@ export default function CanicrossApp() {
       week: 1,
       day: 5,
       category: "C",
-      title: "Trilha com Subidas",
+      title: "Subidas (30–40 min)",
       description: "Treino em terreno com elevação",
-      duration: "40 min",
-      objetivo: "Fortalecer musculatura e resistência",
+      duration: "30-40 min",
+      objetivo: "Fortalecimento muscular e comando sob esforço",
       details: [
-        "Escolha trilha com subidas moderadas",
-        "Mantenha ritmo constante nas subidas",
-        "Recupere nas descidas"
+        "10 min aquecimento",
+        "6 subidas curtas de 60–90 segundos cada",
+        "Desça caminhando (recuperação)",
+        "10 min trote leve final"
       ],
       difficulty: "Intermediário",
       completed: false,
@@ -619,6 +621,220 @@ export default function CanicrossApp() {
     {
       id: "int-1-6",
       week: 1,
+      day: 6,
+      category: "REST",
+      title: "Dia de Descanso",
+      description: "Recuperação é parte essencial do treino",
+      duration: "Descanso",
+      objetivo: "Permitir recuperação muscular e mental",
+      details: [
+        "Sem treino hoje",
+        "Hidrate bem você e seu cão",
+        "Alongamentos leves são bem-vindos"
+      ],
+      difficulty: "Intermediário",
+      completed: false
+    },
+    // NÍVEL INTERMEDIÁRIO - Semanas 3 e 4 (Velocidade, Técnica e Terreno)
+    {
+      id: "int-2-1",
+      week: 2,
+      day: 1,
+      category: "A",
+      title: "Fartlek na trilha (35–45 min)",
+      description: "Ritmo variando entre leve, moderado e forte",
+      duration: "35-45 min",
+      objective: "Adaptação ao terreno e resposta rápida aos comandos",
+      details: [
+        "Ritmo variando entre leve, moderado e forte conforme o terreno",
+        "Exemplos: 4 min leve → 2 min forte",
+        "5 min moderado → 1 min sprint"
+      ],
+      difficulty: "Intermediário",
+      completed: false,
+      completedWeek1: false,
+      completedWeek2: false
+    },
+    {
+      id: "int-2-2",
+      week: 2,
+      day: 2,
+      category: "REST",
+      title: "Dia de Descanso",
+      description: "Recuperação é parte essencial do treino",
+      duration: "Descanso",
+      objective: "Permitir recuperação muscular e mental",
+      details: [
+        "Sem treino hoje",
+        "Hidrate bem você e seu cão",
+        "Alongamentos leves são bem-vindos"
+      ],
+      difficulty: "Intermediário",
+      completed: false
+    },
+    {
+      id: "int-2-3",
+      week: 2,
+      day: 3,
+      category: "B",
+      title: "Intervalado 2:1 (30–35 min)",
+      description: "Treino intervalado de velocidade",
+      duration: "30-35 min",
+      objective: "Ganho de velocidade controlada",
+      details: [
+        "2 min corrida rápida com tração",
+        "1 min trote/caminhada",
+        "Repetir por 10 ciclos"
+      ],
+      difficulty: "Intermediário",
+      completed: false,
+      completedWeek1: false,
+      completedWeek2: false
+    },
+    {
+      id: "int-2-4",
+      week: 2,
+      day: 4,
+      category: "REST",
+      title: "Dia de Descanso",
+      description: "Recuperação é parte essencial do treino",
+      duration: "Descanso",
+      objective: "Permitir recuperação muscular e mental",
+      details: [
+        "Sem treino hoje",
+        "Hidrate bem você e seu cão",
+        "Alongamentos leves são bem-vindos"
+      ],
+      difficulty: "Intermediário",
+      completed: false
+    },
+    {
+      id: "int-2-5",
+      week: 2,
+      day: 5,
+      category: "C",
+      title: "Trilhas técnicas (30–50 min)",
+      description: "Terreno com curvas, raízes, subidas e descidas",
+      duration: "30-50 min",
+      objetivo: "Melhorar coordenação e segurança",
+      details: [
+        "Terreno com curvas, raízes, subidas e descidas",
+        "Trabalhar comandos: direita, esquerda, devagar, vamos, para"
+      ],
+      difficulty: "Intermediário",
+      completed: false,
+      completedWeek1: false,
+      completedWeek2: false
+    },
+    {
+      id: "int-2-6",
+      week: 2,
+      day: 6,
+      category: "REST",
+      title: "Dia de Descanso",
+      description: "Recuperação é parte essencial do treino",
+      duration: "Descanso",
+      objetivo: "Permitir recuperação muscular e mental",
+      details: [
+        "Sem treino hoje",
+        "Hidrate bem você e seu cão",
+        "Alongamentos leves são bem-vindos"
+      ],
+      difficulty: "Intermediário",
+      completed: false
+    },
+    // NÍVEL INTERMEDIÁRIO - Semanas 5 e 6 (Consolidação + Intensidade)
+    {
+      id: "int-3-1",
+      week: 3,
+      day: 1,
+      category: "A",
+      title: "Longão (45–60 min)",
+      description: "Terreno fácil, ritmo moderado",
+      duration: "45-60 min",
+      objective: "Resistência avançada",
+      details: [
+        "Terreno fácil, ritmo moderado",
+        "Foque em constância e hidratação"
+      ],
+      difficulty: "Intermediário",
+      completed: false,
+      completedWeek1: false,
+      completedWeek2: false
+    },
+    {
+      id: "int-3-2",
+      week: 3,
+      day: 2,
+      category: "REST",
+      title: "Dia de Descanso",
+      description: "Recuperação é parte essencial do treino",
+      duration: "Descanso",
+      objective: "Permitir recuperação muscular e mental",
+      details: [
+        "Sem treino hoje",
+        "Hidrate bem você e seu cão",
+        "Alongamentos leves são bem-vindos"
+      ],
+      difficulty: "Intermediário",
+      completed: false
+    },
+    {
+      id: "int-3-3",
+      week: 3,
+      day: 3,
+      category: "B",
+      title: "Sprints com tração (20–25 min)",
+      description: "Treino de explosão e velocidade",
+      duration: "20-25 min",
+      objective: "Explosão do cão + velocidade sua",
+      details: [
+        "8 a 10 tiros de 20–30 segundos puxando forte",
+        "1 min de recuperação entre eles"
+      ],
+      difficulty: "Intermediário",
+      completed: false,
+      completedWeek1: false,
+      completedWeek2: false
+    },
+    {
+      id: "int-3-4",
+      week: 3,
+      day: 4,
+      category: "REST",
+      title: "Dia de Descanso",
+      description: "Recuperação é parte essencial do treino",
+      duration: "Descanso",
+      objective: "Permitir recuperação muscular e mental",
+      details: [
+        "Sem treino hoje",
+        "Hidrate bem você e seu cão",
+        "Alongamentos leves são bem-vindos"
+      ],
+      difficulty: "Intermediário",
+      completed: false
+    },
+    {
+      id: "int-3-5",
+      week: 3,
+      day: 5,
+      category: "C",
+      title: "Simulação de prova (30–40 min)",
+      description: "Ritmo firme do início ao fim",
+      duration: "30-40 min",
+      objetivo: "Preparar dupla para competições ou treinos intensos",
+      details: [
+        "Ritmo firme do início ao fim",
+        "Trabalhar largada, ultrapassagens e comandos"
+      ],
+      difficulty: "Intermediário",
+      completed: false,
+      completedWeek1: false,
+      completedWeek2: false
+    },
+    {
+      id: "int-3-6",
+      week: 3,
       day: 6,
       category: "REST",
       title: "Dia de Descanso",
@@ -677,7 +893,7 @@ export default function CanicrossApp() {
   // ESTADO INICIAL FORÇADO - SEMPRE COMEÇAR DO ZERO
   useEffect(() => {
     // Inicializar progresso de semanas baseado no nível
-    const maxWeeks = userLevel === "Iniciante" ? 4 : userLevel === "Intermediário" ? 2 : 5;
+    const maxWeeks = userLevel === "Iniciante" ? 4 : userLevel === "Intermediário" ? 3 : 5;
     const initialProgress: WeekProgress[] = [];
     for (let i = 1; i <= maxWeeks; i++) {
       initialProgress.push({
@@ -1388,7 +1604,7 @@ export default function CanicrossApp() {
                     {/* Renderização específica para Intermediário */}
                     {userLevel === "Intermediário" ? (
                       <>
-                        {[1, 2].map(blockNum => {
+                        {[1, 2, 3].map(blockNum => {
                           const weekWorkouts = filteredWorkouts.filter(w => w.week === blockNum);
                           if (weekWorkouts.length === 0) return null;
 
@@ -1403,7 +1619,9 @@ export default function CanicrossApp() {
                                   {!isUnlocked && <Lock className="w-5 h-5 text-gray-500" />}
                                   <h3 className="text-lg font-bold text-indigo-900 flex items-center gap-2">
                                     <Calendar className="w-5 h-5" />
-                                    Bloco {blockNum} - Semanas {blockNum * 2 - 1} e {blockNum * 2}
+                                    {blockNum === 1 && "Semanas 1 e 2 – Construção de Ritmo e Força"}
+                                    {blockNum === 2 && "Semanas 3 e 4 – Velocidade, Técnica e Terreno"}
+                                    {blockNum === 3 && "Semanas 5 e 6 – Consolidação + Intensidade"}
                                   </h3>
                                 </div>
                                 <div className="h-px bg-indigo-300 flex-1"></div>
@@ -1490,7 +1708,7 @@ export default function CanicrossApp() {
                                               disabled={isBlocked || !canAccessWeek1}
                                               className="w-5 h-5 rounded border-2 border-indigo-400 text-indigo-600 focus:ring-indigo-500 disabled:opacity-50 cursor-pointer"
                                             />
-                                            <span className="text-sm font-medium text-gray-700">Semana 1</span>
+                                            <span className="text-sm font-medium text-gray-700">Semana {blockNum * 2 - 1}</span>
                                           </div>
                                           <div className="flex items-center gap-2">
                                             <input
@@ -1500,7 +1718,7 @@ export default function CanicrossApp() {
                                               disabled={isBlocked || !canAccessWeek2}
                                               className="w-5 h-5 rounded border-2 border-indigo-400 text-indigo-600 focus:ring-indigo-500 disabled:opacity-50 cursor-pointer"
                                             />
-                                            <span className="text-sm font-medium text-gray-700">Semana 2</span>
+                                            <span className="text-sm font-medium text-gray-700">Semana {blockNum * 2}</span>
                                           </div>
                                         </div>
 
