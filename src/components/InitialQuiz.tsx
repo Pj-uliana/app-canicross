@@ -325,6 +325,24 @@ export default function InitialQuiz({ onComplete }: QuizProps) {
     }
   };
 
+  // Função de bypass para desenvolvimento
+  const handleCheckoutClick = () => {
+    // Bypass em desenvolvimento
+    if (process.env.NODE_ENV === "development") {
+      // Salvar no localStorage
+      localStorage.setItem("canicross_premium", "true");
+      localStorage.setItem("canicross_quiz_completed", "true");
+      localStorage.setItem("canicross_level", userLevel);
+      
+      // Entrar no app
+      onComplete(userLevel);
+      return;
+    }
+    
+    // Produção: abrir checkout normalmente
+    window.open("https://pay.cakto.com.br/whuto5r_724419", "_blank");
+  };
+
   // Tela de conversão final
   if (showConversion) {
     return (
@@ -411,7 +429,7 @@ export default function InitialQuiz({ onComplete }: QuizProps) {
                 Acesse agora o programa completo e comece a treinar com método, segurança e resultados reais.
               </p>
               <Button
-                onClick={() => window.open("https://pay.cakto.com.br/whuto5r_724419", "_blank")}
+                onClick={handleCheckoutClick}
                 className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-bold text-lg px-12 py-6 shadow-2xl hover:shadow-3xl transition-all duration-300 hover:scale-105"
               >
                 <Sparkles className="w-6 h-6 mr-3" />

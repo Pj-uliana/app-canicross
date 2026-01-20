@@ -24,7 +24,10 @@ import {
   Star,
   Dumbbell,
   CheckCircle2,
-  Lock
+  Lock,
+  Calendar,
+  Coffee,
+  AlertCircle
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -32,6 +35,7 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import InitialQuiz from "@/components/InitialQuiz";
 
 interface Run {
@@ -65,7 +69,8 @@ interface Goal {
 interface DailyWorkout {
   id: string;
   week: number;
-  category: "A" | "B" | "C" | "D";
+  day: number;
+  category: "A" | "B" | "C" | "D" | "REST";
   title: string;
   description: string;
   duration: string;
@@ -73,6 +78,24 @@ interface DailyWorkout {
   details: string[];
   difficulty: "Iniciante" | "Intermediário" | "Avançado";
   completed: boolean;
+  // Para nível intermediário: rastrear conclusão em cada semana
+  completedWeek1?: boolean;
+  completedWeek2?: boolean;
+}
+
+interface WeekProgress {
+  weekNumber: number;
+  unlocked: boolean;
+  completedWorkouts: number;
+  totalWorkouts: number;
+}
+
+interface WeeklySummary {
+  weekNumber: number;
+  completedWorkouts: number;
+  totalTime: number;
+  workoutTypes: string[];
+  isRepeat?: boolean; // Para nível intermediário
 }
 
 export default function CanicrossApp() {
@@ -91,11 +114,19 @@ export default function CanicrossApp() {
     { id: "3", title: "Tempo de treino", current: 0, target: 60, unit: "min", completed: false }
   ]);
 
+  // Estados para controle de semanas
+  const [weekProgress, setWeekProgress] = useState<WeekProgress[]>([]);
+  const [showWeeklySummary, setShowWeeklySummary] = useState(false);
+  const [currentWeeklySummary, setCurrentWeeklySummary] = useState<WeeklySummary | null>(null);
+  const [showBlockedMessage, setShowBlockedMessage] = useState(false);
+  const [unlockedLevels, setUnlockedLevels] = useState<string[]>(["Iniciante"]);
+
   const [dailyWorkouts, setDailyWorkouts] = useState<DailyWorkout[]>([
-    // SEMANA 1 - Adaptação e Comandos
+    // SEMANA 1 - Adaptação e Comandos (Iniciante)
     {
-      id: "1",
+      id: "1-1",
       week: 1,
+      day: 1,
       category: "A",
       title: "Caminhada + Comandos",
       description: "Ensinar comandos básicos e acostumar o cão a puxar",
@@ -111,8 +142,26 @@ export default function CanicrossApp() {
       completed: false
     },
     {
-      id: "2",
+      id: "1-2",
       week: 1,
+      day: 2,
+      category: "REST",
+      title: "Dia de Descanso",
+      description: "Recuperação é parte essencial do treino",
+      duration: "Descanso",
+      objective: "Permitir recuperação muscular e mental",
+      details: [
+        "Sem treino hoje",
+        "Hidrate bem você e seu cão",
+        "Alongamentos leves são bem-vindos"
+      ],
+      difficulty: "Iniciante",
+      completed: false
+    },
+    {
+      id: "1-3",
+      week: 1,
+      day: 3,
       category: "B",
       title: "Trote Leve",
       description: "Introdução ao trote com o cão à frente",
@@ -127,8 +176,26 @@ export default function CanicrossApp() {
       completed: false
     },
     {
-      id: "3",
+      id: "1-4",
       week: 1,
+      day: 4,
+      category: "REST",
+      title: "Dia de Descanso",
+      description: "Recuperação é parte essencial do treino",
+      duration: "Descanso",
+      objective: "Permitir recuperação muscular e mental",
+      details: [
+        "Sem treino hoje",
+        "Hidrate bem você e seu cão",
+        "Alongamentos leves são bem-vindos"
+      ],
+      difficulty: "Iniciante",
+      completed: false
+    },
+    {
+      id: "1-5",
+      week: 1,
+      day: 5,
       category: "C",
       title: "Trote Intervalado",
       description: "Alternância entre trote e caminhada",
@@ -140,10 +207,28 @@ export default function CanicrossApp() {
       difficulty: "Iniciante",
       completed: false
     },
-    // SEMANA 2 - Introdução à Tração
     {
-      id: "4",
+      id: "1-6",
+      week: 1,
+      day: 6,
+      category: "REST",
+      title: "Dia de Descanso",
+      description: "Recuperação é parte essencial do treino",
+      duration: "Descanso",
+      objetivo: "Permitir recuperação muscular e mental",
+      details: [
+        "Sem treino hoje",
+        "Hidrate bem você e seu cão",
+        "Alongamentos leves são bem-vindos"
+      ],
+      difficulty: "Iniciante",
+      completed: false
+    },
+    // SEMANA 2 - Introdução à Tração (Iniciante)
+    {
+      id: "2-1",
       week: 2,
+      day: 1,
       category: "A",
       title: "Trote Intervalado Progressivo",
       description: "Aumentar tempo de trote",
@@ -156,8 +241,26 @@ export default function CanicrossApp() {
       completed: false
     },
     {
-      id: "5",
+      id: "2-2",
       week: 2,
+      day: 2,
+      category: "REST",
+      title: "Dia de Descanso",
+      description: "Recuperação é parte essencial do treino",
+      duration: "Descanso",
+      objetivo: "Permitir recuperação muscular e mental",
+      details: [
+        "Sem treino hoje",
+        "Hidrate bem você e seu cão",
+        "Alongamentos leves são bem-vindos"
+      ],
+      difficulty: "Iniciante",
+      completed: false
+    },
+    {
+      id: "2-3",
+      week: 2,
+      day: 3,
       category: "B",
       title: "Tração Leve",
       description: "Primeiros exercícios de tração",
@@ -172,13 +275,31 @@ export default function CanicrossApp() {
       completed: false
     },
     {
-      id: "6",
+      id: "2-4",
       week: 2,
+      day: 4,
+      category: "REST",
+      title: "Dia de Descanso",
+      description: "Recuperação é parte essencial do treino",
+      duration: "Descanso",
+      objetivo: "Permitir recuperação muscular e mental",
+      details: [
+        "Sem treino hoje",
+        "Hidrate bem você e seu cão",
+        "Alongamentos leves são bem-vindos"
+      ],
+      difficulty: "Iniciante",
+      completed: false
+    },
+    {
+      id: "2-5",
+      week: 2,
+      day: 5,
       category: "C",
       title: "Trote Contínuo Inicial",
       description: "Manter ritmo constante",
       duration: "18-20 min",
-      objetivo: "Desenvolver resistência contínua",
+      objective: "Desenvolver resistência contínua",
       details: [
         "12 min de trote leve com o cão mantendo ritmo",
         "Caminhada final"
@@ -186,15 +307,33 @@ export default function CanicrossApp() {
       difficulty: "Iniciante",
       completed: false
     },
-    // SEMANA 3 - Resistência e Ritmo
     {
-      id: "7",
+      id: "2-6",
+      week: 2,
+      day: 6,
+      category: "REST",
+      title: "Dia de Descanso",
+      description: "Recuperação é parte essencial do treino",
+      duration: "Descanso",
+      objetivo: "Permitir recuperação muscular e mental",
+      details: [
+        "Sem treino hoje",
+        "Hidrate bem você e seu cão",
+        "Alongamentos leves são bem-vindos"
+      ],
+      difficulty: "Iniciante",
+      completed: false
+    },
+    // SEMANA 3 - Resistência e Ritmo (Iniciante)
+    {
+      id: "3-1",
       week: 3,
+      day: 1,
       category: "A",
       title: "Trote Contínuo Estendido",
       description: "Aumentar duração do trote",
       duration: "25 min",
-      objetivo: "Melhorar o fôlego do cão e o seu",
+      objective: "Melhorar o fôlego do cão e o seu",
       details: [
         "15-18 min correndo",
         "7-10 min caminhada"
@@ -203,8 +342,26 @@ export default function CanicrossApp() {
       completed: false
     },
     {
-      id: "8",
+      id: "3-2",
       week: 3,
+      day: 2,
+      category: "REST",
+      title: "Dia de Descanso",
+      description: "Recuperação é parte essencial do treino",
+      duration: "Descanso",
+      objetivo: "Permitir recuperação muscular e mental",
+      details: [
+        "Sem treino hoje",
+        "Hidrate bem você e seu cão",
+        "Alongamentos leves são bem-vindos"
+      ],
+      difficulty: "Iniciante",
+      completed: false
+    },
+    {
+      id: "3-3",
+      week: 3,
+      day: 3,
       category: "B",
       title: "Intervalado Rápido",
       description: "Introduzir velocidade",
@@ -219,8 +376,26 @@ export default function CanicrossApp() {
       completed: false
     },
     {
-      id: "9",
+      id: "3-4",
       week: 3,
+      day: 4,
+      category: "REST",
+      title: "Dia de Descanso",
+      description: "Recuperação é parte essencial do treino",
+      duration: "Descanso",
+      objetivo: "Permitir recuperação muscular e mental",
+      details: [
+        "Sem treino hoje",
+        "Hidrate bem você e seu cão",
+        "Alongamentos leves são bem-vindos"
+      ],
+      difficulty: "Iniciante",
+      completed: false
+    },
+    {
+      id: "3-5",
+      week: 3,
+      day: 5,
       category: "C",
       title: "Trilha Leve",
       description: "Treino em terreno variado",
@@ -233,10 +408,28 @@ export default function CanicrossApp() {
       difficulty: "Iniciante",
       completed: false
     },
-    // SEMANA 4 - Consolidando o Canicross
     {
-      id: "10",
+      id: "3-6",
+      week: 3,
+      day: 6,
+      category: "REST",
+      title: "Dia de Descanso",
+      description: "Recuperação é parte essencial do treino",
+      duration: "Descanso",
+      objetivo: "Permitir recuperação muscular e mental",
+      details: [
+        "Sem treino hoje",
+        "Hidrate bem você e seu cão",
+        "Alongamentos leves são bem-vindos"
+      ],
+      difficulty: "Iniciante",
+      completed: false
+    },
+    // SEMANA 4 - Consolidando o Canicross (Iniciante)
+    {
+      id: "4-1",
       week: 4,
+      day: 1,
       category: "A",
       title: "Corrida com Tração",
       description: "Corrida completa com o cão guiando",
@@ -249,8 +442,26 @@ export default function CanicrossApp() {
       completed: false
     },
     {
-      id: "11",
+      id: "4-2",
       week: 4,
+      day: 2,
+      category: "REST",
+      title: "Dia de Descanso",
+      description: "Recuperação é parte essencial do treino",
+      duration: "Descanso",
+      objetivo: "Permitir recuperação muscular e mental",
+      details: [
+        "Sem treino hoje",
+        "Hidrate bem você e seu cão",
+        "Alongamentos leves são bem-vindos"
+      ],
+      difficulty: "Iniciante",
+      completed: false
+    },
+    {
+      id: "4-3",
+      week: 4,
+      day: 3,
       category: "B",
       title: "Intervalado 2:1",
       description: "Treino intervalado avançado",
@@ -263,8 +474,26 @@ export default function CanicrossApp() {
       completed: false
     },
     {
-      id: "12",
+      id: "4-4",
       week: 4,
+      day: 4,
+      category: "REST",
+      title: "Dia de Descanso",
+      description: "Recuperação é parte essencial do treino",
+      duration: "Descanso",
+      objetivo: "Permitir recuperação muscular e mental",
+      details: [
+        "Sem treino hoje",
+        "Hidrate bem você e seu cão",
+        "Alongamentos leves são bem-vindos"
+      ],
+      difficulty: "Iniciante",
+      completed: false
+    },
+    {
+      id: "4-5",
+      week: 4,
+      day: 5,
       category: "C",
       title: "Simulação de Prova",
       description: "Treino longo simulando competição",
@@ -278,342 +507,130 @@ export default function CanicrossApp() {
       difficulty: "Iniciante",
       completed: false
     },
-    // TREINOS INTERMEDIÁRIOS - SEMANAS 1 e 2
     {
-      id: "13",
-      week: 1,
-      category: "A",
-      title: "Endurance",
-      description: "Corrida contínua em intensidade moderada",
-      duration: "35-45 min",
-      objetivo: "Aumentar a resistência do cão e sua capacidade aeróbica",
+      id: "4-6",
+      week: 4,
+      day: 6,
+      category: "REST",
+      title: "Dia de Descanso",
+      description: "Recuperação é parte essencial do treino",
+      duration: "Descanso",
+      objetivo: "Permitir recuperação muscular e mental",
       details: [
-        "10 min trote leve (aquecimento)",
-        "20-25 min corrida contínua em intensidade moderada",
-        "5-10 min caminhada e trote leve"
+        "Sem treino hoje",
+        "Hidrate bem você e seu cão",
+        "Alongamentos leves são bem-vindos"
+      ],
+      difficulty: "Iniciante",
+      completed: false
+    },
+    // NÍVEL INTERMEDIÁRIO - Semanas 1 e 2 (mesmo treino, repetido)
+    {
+      id: "int-1-1",
+      week: 1,
+      day: 1,
+      category: "A",
+      title: "Corrida Base com Tração",
+      description: "Corrida contínua com tração moderada",
+      duration: "35 min",
+      objective: "Desenvolver resistência aeróbica",
+      details: [
+        "5 min aquecimento",
+        "25 min corrida com tração constante",
+        "5 min desaquecimento"
+      ],
+      difficulty: "Intermediário",
+      completed: false,
+      completedWeek1: false,
+      completedWeek2: false
+    },
+    {
+      id: "int-1-2",
+      week: 1,
+      day: 2,
+      category: "REST",
+      title: "Dia de Descanso",
+      description: "Recuperação é parte essencial do treino",
+      duration: "Descanso",
+      objective: "Permitir recuperação muscular e mental",
+      details: [
+        "Sem treino hoje",
+        "Hidrate bem você e seu cão",
+        "Alongamentos leves são bem-vindos"
       ],
       difficulty: "Intermediário",
       completed: false
     },
     {
-      id: "14",
+      id: "int-1-3",
       week: 1,
+      day: 3,
       category: "B",
-      title: "Intervalado de Força",
-      description: "Tiros de força com tração intensa",
-      duration: "25-30 min",
-      objetivo: "Melhorar potência e tração",
+      title: "Intervalado de Velocidade",
+      description: "Treino de velocidade com intervalos",
+      duration: "30 min",
+      objective: "Melhorar velocidade e potência",
       details: [
         "10 min aquecimento",
-        "6 a 8 tiros de 45 segundos puxando forte",
-        "Intervalo de 1 min caminhando entre os tiros",
-        "5 min desaceleração"
+        "8x (1 min rápido + 1 min recuperação)",
+        "6 min desaquecimento"
       ],
       difficulty: "Intermediário",
-      completed: false
+      completed: false,
+      completedWeek1: false,
+      completedWeek2: false
     },
     {
-      id: "15",
+      id: "int-1-4",
       week: 1,
-      category: "C",
-      title: "Subidas",
-      description: "Fortalecimento em terreno inclinado",
-      duration: "30-40 min",
-      objetivo: "Fortalecimento muscular e comando sob esforço",
+      day: 4,
+      category: "REST",
+      title: "Dia de Descanso",
+      description: "Recuperação é parte essencial do treino",
+      duration: "Descanso",
+      objective: "Permitir recuperação muscular e mental",
       details: [
-        "10 min aquecimento",
-        "6 subidas curtas de 60-90 segundos cada",
-        "Desça caminhando (recuperação)",
-        "10 min trote leve final"
-      ],
-      difficulty: "Intermediário",
-      completed: false
-    },
-    // SEMANAS 3 e 4 - Velocidade, Técnica e Terreno
-    {
-      id: "16",
-      week: 3,
-      category: "A",
-      title: "Fartlek na Trilha",
-      description: "Ritmo variado conforme o terreno",
-      duration: "35-45 min",
-      objetivo: "Adaptação ao terreno e resposta rápida aos comandos",
-      details: [
-        "Ritmo variando entre leve, moderado e forte conforme o terreno",
-        "Exemplo: 4 min leve → 2 min forte",
-        "Exemplo: 5 min moderado → 1 min sprint"
+        "Sem treino hoje",
+        "Hidrate bem você e seu cão",
+        "Alongamentos leves são bem-vindos"
       ],
       difficulty: "Intermediário",
       completed: false
     },
     {
-      id: "17",
-      week: 3,
-      category: "B",
-      title: "Intervalado 2:1",
-      description: "Velocidade controlada com intervalos",
-      duration: "30-35 min",
-      objetivo: "Ganho de velocidade controlada",
-      details: [
-        "2 min corrida rápida com tração",
-        "1 min trote/caminhada",
-        "Repetir por 10 ciclos"
-      ],
-      difficulty: "Intermediário",
-      completed: false
-    },
-    {
-      id: "18",
-      week: 3,
-      category: "C",
-      title: "Trilhas Técnicas",
-      description: "Terreno desafiador com obstáculos",
-      duration: "30-50 min",
-      objetivo: "Melhorar coordenação e segurança",
-      details: [
-        "Terreno com curvas, raízes, subidas e descidas",
-        "Trabalhar comandos: direita, esquerda, devagar, vamos, para"
-      ],
-      difficulty: "Intermediário",
-      completed: false
-    },
-    // SEMANAS 5 e 6 - Consolidação + Intensidade
-    {
-      id: "19",
-      week: 5,
-      category: "A",
-      title: "Longão",
-      description: "Corrida longa em ritmo moderado",
-      duration: "45-60 min",
-      objetivo: "Resistência avançada",
-      details: [
-        "Terreno fácil, ritmo moderado",
-        "Foque em constância e hidratação"
-      ],
-      difficulty: "Intermediário",
-      completed: false
-    },
-    {
-      id: "20",
-      week: 5,
-      category: "B",
-      title: "Sprints com Tração",
-      description: "Explosão e velocidade máxima",
-      duration: "20-25 min",
-      objetivo: "Explosão do cão + velocidade sua",
-      details: [
-        "8 a 10 tiros de 20-30 segundos puxando forte",
-        "1 min de recuperação entre eles"
-      ],
-      difficulty: "Intermediário",
-      completed: false
-    },
-    {
-      id: "21",
-      week: 5,
-      category: "C",
-      title: "Simulação de Prova",
-      description: "Preparação para competições",
-      duration: "30-40 min",
-      objetivo: "Preparar dupla para competições ou treinos intensos",
-      details: [
-        "Ritmo firme do início ao fim",
-        "Trabalhar largada, ultrapassagens e comandos"
-      ],
-      difficulty: "Intermediário",
-      completed: false
-    },
-    // TREINOS AVANÇADOS - SEMANAS 1 e 2
-    {
-      id: "22",
+      id: "int-1-5",
       week: 1,
-      category: "A",
-      title: "Intervalado Forte",
-      description: "Tiros de alta intensidade",
-      duration: "30-40 min",
-      objetivo: "Aumentar VO2 e potência do cão",
-      details: [
-        "10 min aquecimento",
-        "8 a 10 tiros de 1 min em alta intensidade + 1 min de trote leve",
-        "5 min desaceleração"
-      ],
-      difficulty: "Avançado",
-      completed: false
-    },
-    {
-      id: "23",
-      week: 1,
-      category: "B",
-      title: "Subidas Longas",
-      description: "Subidas prolongadas com tração",
-      duration: "35-45 min",
-      objetivo: "Força, potência e resistência muscular",
-      details: [
-        "10 min trotando",
-        "4 a 6 subidas de 3 min com boa tração",
-        "Recuperação descendo caminhando",
-        "5 min finais leves"
-      ],
-      difficulty: "Avançado",
-      completed: false
-    },
-    {
-      id: "24",
-      week: 1,
+      day: 5,
       category: "C",
-      title: "Trilhas Técnicas Intensas",
-      description: "Terreno técnico em alta velocidade",
-      duration: "40-50 min",
-      objetivo: "Controle e precisão em alta velocidade",
+      title: "Trilha com Subidas",
+      description: "Treino em terreno com elevação",
+      duration: "40 min",
+      objetivo: "Fortalecer musculatura e resistência",
       details: [
-        "Terreno com curvas, raízes, subidas curtas, descidas rápidas",
-        "Trabalhar comandos rápidos: 'direita', 'esquerda', 'devagar', 'vamos'"
+        "Escolha trilha com subidas moderadas",
+        "Mantenha ritmo constante nas subidas",
+        "Recupere nas descidas"
       ],
-      difficulty: "Avançado",
-      completed: false
+      difficulty: "Intermediário",
+      completed: false,
+      completedWeek1: false,
+      completedWeek2: false
     },
     {
-      id: "25",
+      id: "int-1-6",
       week: 1,
-      category: "D",
-      title: "Resistência Contínua",
-      description: "Corrida longa sem pausas",
-      duration: "45-55 min",
-      objetivo: "Base sólida para treinos explosivos",
+      day: 6,
+      category: "REST",
+      title: "Dia de Descanso",
+      description: "Recuperação é parte essencial do treino",
+      duration: "Descanso",
+      objetivo: "Permitir recuperação muscular e mental",
       details: [
-        "Ritmo firme, sem pausas",
-        "Cão sempre à frente puxando"
+        "Sem treino hoje",
+        "Hidrate bem você e seu cão",
+        "Alongamentos leves são bem-vindos"
       ],
-      difficulty: "Avançado",
-      completed: false
-    },
-    // SEMANAS 3 e 4 - Força Explosiva + Velocidade
-    {
-      id: "26",
-      week: 3,
-      category: "A",
-      title: "Sprints com Tração",
-      description: "Explosão máxima",
-      duration: "25-35 min",
-      objetivo: "Explosão e aceleração",
-      details: [
-        "10 min aquecimento",
-        "10 a 12 sprints de 20-25 segundos puxando no máximo",
-        "1 min caminhada leve entre eles"
-      ],
-      difficulty: "Avançado",
-      completed: false
-    },
-    {
-      id: "27",
-      week: 3,
-      category: "B",
-      title: "Fartlek Avançado",
-      description: "Variação intensa de ritmo",
-      duration: "45 min",
-      objetivo: "Adaptação metabólica e leitura de terreno",
-      details: [
-        "5 min ritmo moderado",
-        "2 min forte",
-        "3 min leve",
-        "1 min sprint",
-        "Repete 3-4 vezes"
-      ],
-      difficulty: "Avançado",
-      completed: false
-    },
-    {
-      id: "28",
-      week: 3,
-      category: "C",
-      title: "Simulação de Prova com Ultrapassagens",
-      description: "Treino competitivo",
-      duration: "35-45 min",
-      objetivo: "Preparo psicológico e técnico para competições",
-      details: [
-        "Corrido em trilha",
-        "Pratique ultrapassar outros cães ou pessoas (mesmo que imaginárias)",
-        "Trabalhe largada forte"
-      ],
-      difficulty: "Avançado",
-      completed: false
-    },
-    {
-      id: "29",
-      week: 3,
-      category: "D",
-      title: "Subidas Explosivas",
-      description: "Subidas curtas e intensas",
-      duration: "30-35 min",
-      objetivo: "Força máxima e potência",
-      details: [
-        "8 subidas curtas de 30-40 segundos",
-        "Descida leve"
-      ],
-      difficulty: "Avançado",
-      completed: false
-    },
-    // SEMANAS 5 e 6 - Pico de Performance + Prova
-    {
-      id: "30",
-      week: 5,
-      category: "A",
-      title: "Tempo Run",
-      description: "Ritmo forte e constante",
-      duration: "30-40 min",
-      objetivo: "Aumentar limiar anaeróbico",
-      details: [
-        "Correr em ritmo forte e constante",
-        "Cão puxando de forma contínua"
-      ],
-      difficulty: "Avançado",
-      completed: false
-    },
-    {
-      id: "31",
-      week: 5,
-      category: "B",
-      title: "Longão",
-      description: "Corrida longa de resistência",
-      duration: "60-75 min",
-      objetivo: "Grande resistência física e mental",
-      details: [
-        "Terreno leve",
-        "Ritmo confortável",
-        "Hidratação e constância"
-      ],
-      difficulty: "Avançado",
-      completed: false
-    },
-    {
-      id: "32",
-      week: 5,
-      category: "C",
-      title: "Intervalado 3:1",
-      description: "Intervalos de alta intensidade",
-      duration: "30-40 min",
-      objetivo: "Velocidade sustentada",
-      details: [
-        "3 min forte + 1 min leve",
-        "8-10 ciclos"
-      ],
-      difficulty: "Avançado",
-      completed: false
-    },
-    {
-      id: "33",
-      week: 5,
-      category: "D",
-      title: "Treino Técnico Final",
-      description: "Polimento técnico",
-      duration: "25-35 min",
-      objetivo: "Polir técnica antes de competições",
-      details: [
-        "Trilhas mais rápidas",
-        "Comandos precisos",
-        "Trabalhar descidas com controle"
-      ],
-      difficulty: "Avançado",
+      difficulty: "Intermediário",
       completed: false
     }
   ]);
@@ -657,40 +674,29 @@ export default function CanicrossApp() {
     }
   }, []);
 
-  // Load data from localStorage
+  // ESTADO INICIAL FORÇADO - SEMPRE COMEÇAR DO ZERO
   useEffect(() => {
-    const savedRuns = localStorage.getItem("canicross_runs");
-    const savedGoals = localStorage.getItem("canicross_goals");
-    const savedLevel = localStorage.getItem("canicross_level");
-    const savedWorkouts = localStorage.getItem("canicross_workouts");
-    
-    if (savedRuns) setRuns(JSON.parse(savedRuns));
-    if (savedGoals) setGoals(JSON.parse(savedGoals));
-    if (savedLevel) setUserLevel(savedLevel as "Iniciante" | "Intermediário" | "Avançado");
-    if (savedWorkouts) setDailyWorkouts(JSON.parse(savedWorkouts));
-  }, []);
-
-  // Save runs to localStorage
-  useEffect(() => {
-    if (runs.length > 0) {
-      localStorage.setItem("canicross_runs", JSON.stringify(runs));
+    // Inicializar progresso de semanas baseado no nível
+    const maxWeeks = userLevel === "Iniciante" ? 4 : userLevel === "Intermediário" ? 2 : 5;
+    const initialProgress: WeekProgress[] = [];
+    for (let i = 1; i <= maxWeeks; i++) {
+      initialProgress.push({
+        weekNumber: i,
+        unlocked: i === 1,
+        completedWorkouts: 0,
+        totalWorkouts: 3
+      });
     }
-  }, [runs]);
-
-  // Save goals to localStorage
-  useEffect(() => {
-    localStorage.setItem("canicross_goals", JSON.stringify(goals));
-  }, [goals]);
-
-  // Save level to localStorage
-  useEffect(() => {
-    localStorage.setItem("canicross_level", userLevel);
+    setWeekProgress(initialProgress);
+    
+    // Garantir que todos os treinos começam não concluídos
+    setDailyWorkouts(prev => prev.map(w => ({ 
+      ...w, 
+      completed: false,
+      completedWeek1: false,
+      completedWeek2: false
+    })));
   }, [userLevel]);
-
-  // Save workouts to localStorage
-  useEffect(() => {
-    localStorage.setItem("canicross_workouts", JSON.stringify(dailyWorkouts));
-  }, [dailyWorkouts]);
 
   // Atualizar metas baseadas no nível
   useEffect(() => {
@@ -726,7 +732,7 @@ export default function CanicrossApp() {
     if (isRunning && !isPaused) {
       interval = setInterval(() => {
         setCurrentRunTime(prev => prev + 1);
-        setCurrentRunDistance(prev => prev + 0.002); // Simula distância
+        setCurrentRunDistance(prev => prev + 0.002);
       }, 1000);
     }
     return () => clearInterval(interval);
@@ -784,12 +790,270 @@ export default function CanicrossApp() {
     setCurrentRunDistance(0);
   };
 
-  const toggleWorkoutCompletion = (workoutId: string) => {
-    setDailyWorkouts(dailyWorkouts.map(workout => 
-      workout.id === workoutId 
-        ? { ...workout, completed: !workout.completed }
-        : workout
-    ));
+  // Verificar se semana está desbloqueada
+  const isWeekUnlocked = (weekNum: number): boolean => {
+    const week = weekProgress.find(w => w.weekNumber === weekNum);
+    return week?.unlocked || false;
+  };
+
+  // Obter treinos de uma semana (apenas A, B, C - sem REST)
+  const getWeekWorkouts = (weekNum: number) => {
+    return dailyWorkouts.filter(
+      w => w.week === weekNum && 
+      w.difficulty === userLevel && 
+      w.category !== "REST"
+    );
+  };
+
+  // Verificar se treino anterior foi concluído (dentro da mesma semana)
+  const isPreviousWorkoutCompleted = (workoutId: string): boolean => {
+    const currentWorkout = dailyWorkouts.find(w => w.id === workoutId);
+    if (!currentWorkout) return false;
+    
+    const weekWorkouts = getWeekWorkouts(currentWorkout.week);
+    const currentIndex = weekWorkouts.findIndex(w => w.id === workoutId);
+    
+    // Se é o primeiro treino da semana (Treino A)
+    if (currentIndex === 0) return true;
+    
+    // Verificar se o treino anterior foi concluído
+    const previousWorkout = weekWorkouts[currentIndex - 1];
+    
+    // Para nível intermediário, verificar conclusão específica da semana
+    if (userLevel === "Intermediário") {
+      // Lógica será implementada no toggle
+      return previousWorkout?.completed || false;
+    }
+    
+    return previousWorkout?.completed || false;
+  };
+
+  // Verificar se pode DESMARCAR um treino
+  const canUncheckWorkout = (workoutId: string): boolean => {
+    const currentWorkout = dailyWorkouts.find(w => w.id === workoutId);
+    if (!currentWorkout || !currentWorkout.completed) return false;
+    
+    const weekWorkouts = getWeekWorkouts(currentWorkout.week);
+    const currentIndex = weekWorkouts.findIndex(w => w.id === workoutId);
+    
+    // Verificar se há treinos posteriores concluídos
+    for (let i = currentIndex + 1; i < weekWorkouts.length; i++) {
+      if (weekWorkouts[i].completed) {
+        return false; // Não pode desmarcar se há treinos posteriores concluídos
+      }
+    }
+    
+    return true; // Pode desmarcar se não há treinos posteriores concluídos
+  };
+
+  // Verificar se pode MARCAR um treino
+  const canCheckWorkout = (workoutId: string): boolean => {
+    const workout = dailyWorkouts.find(w => w.id === workoutId);
+    if (!workout) return false;
+    
+    // Verificar se a semana está desbloqueada
+    if (!isWeekUnlocked(workout.week)) return false;
+    
+    // Verificar se o treino anterior foi concluído
+    if (!isPreviousWorkoutCompleted(workoutId)) return false;
+    
+    return true;
+  };
+
+  // Desbloquear próxima semana
+  const unlockNextWeek = (currentWeek: number) => {
+    setWeekProgress(prev => prev.map(week => {
+      if (week.weekNumber === currentWeek + 1) {
+        return { ...week, unlocked: true };
+      }
+      return week;
+    }));
+  };
+
+  // Bloquear próxima semana (quando desmarcar Treino C)
+  const lockNextWeek = (currentWeek: number) => {
+    setWeekProgress(prev => prev.map(week => {
+      if (week.weekNumber === currentWeek + 1) {
+        return { ...week, unlocked: false };
+      }
+      return week;
+    }));
+  };
+
+  // Verificar se completou o nível e desbloquear próximo
+  const checkLevelCompletion = () => {
+    const currentLevelWorkouts = dailyWorkouts.filter(
+      w => w.difficulty === userLevel && w.category !== "REST"
+    );
+    
+    let allCompleted = false;
+    
+    if (userLevel === "Intermediário") {
+      // Para intermediário, verificar se todos os treinos foram feitos 2x
+      allCompleted = currentLevelWorkouts.every(w => w.completedWeek1 && w.completedWeek2);
+    } else {
+      allCompleted = currentLevelWorkouts.every(w => w.completed);
+    }
+    
+    if (allCompleted) {
+      if (userLevel === "Iniciante" && !unlockedLevels.includes("Intermediário")) {
+        setUnlockedLevels([...unlockedLevels, "Intermediário"]);
+      } else if (userLevel === "Intermediário" && !unlockedLevels.includes("Avançado")) {
+        setUnlockedLevels([...unlockedLevels, "Avançado"]);
+      }
+    }
+  };
+
+  // Função principal de toggle
+  const toggleWorkoutCompletion = (workoutId: string, weekNumber?: 1 | 2) => {
+    const workout = dailyWorkouts.find(w => w.id === workoutId);
+    if (!workout || workout.category === "REST") return;
+    
+    // LÓGICA PARA NÍVEL INTERMEDIÁRIO
+    if (userLevel === "Intermediário" && weekNumber) {
+      const weekKey = weekNumber === 1 ? "completedWeek1" : "completedWeek2";
+      const isCurrentlyCompleted = workout[weekKey];
+      
+      // Se está tentando MARCAR
+      if (!isCurrentlyCompleted) {
+        if (!canCheckWorkout(workoutId)) {
+          setShowBlockedMessage(true);
+          setTimeout(() => setShowBlockedMessage(false), 3000);
+          return;
+        }
+        
+        // Marcar treino para a semana específica
+        setDailyWorkouts(prev => prev.map(w => {
+          if (w.id === workoutId) {
+            const updated = { ...w, [weekKey]: true };
+            // Atualizar completed geral se ambas semanas estiverem completas
+            if (updated.completedWeek1 && updated.completedWeek2) {
+              updated.completed = true;
+            }
+            return updated;
+          }
+          return w;
+        }));
+        
+        // Verificar se completou a semana
+        const weekWorkouts = getWeekWorkouts(workout.week);
+        const allWeekCompleted = weekWorkouts.every(w => {
+          if (w.id === workoutId) return true;
+          return w[weekKey] || false;
+        });
+        
+        if (allWeekCompleted) {
+          setTimeout(() => {
+            const completedCount = weekWorkouts.length;
+            const totalTime = weekWorkouts.reduce((acc, w) => {
+              const time = parseInt(w.duration.match(/\d+/)?.[0] || "0");
+              return acc + time;
+            }, 0);
+            
+            const workoutTypes = weekWorkouts.map(w => w.title);
+            
+            const summary: WeeklySummary = {
+              weekNumber: workout.week,
+              completedWorkouts: completedCount,
+              totalTime,
+              workoutTypes,
+              isRepeat: weekNumber === 2
+            };
+            
+            setCurrentWeeklySummary(summary);
+            setShowWeeklySummary(true);
+            
+            // Se completou a segunda semana, desbloquear próximo bloco
+            if (weekNumber === 2) {
+              unlockNextWeek(workout.week);
+            }
+            
+            checkLevelCompletion();
+          }, 300);
+        }
+      }
+      // Se está tentando DESMARCAR
+      else {
+        // Desmarcar treino para a semana específica
+        setDailyWorkouts(prev => prev.map(w => {
+          if (w.id === workoutId) {
+            const updated = { ...w, [weekKey]: false, completed: false };
+            return updated;
+          }
+          return w;
+        }));
+        
+        // Se desmarcou da semana 2, bloquear próximo bloco
+        if (weekNumber === 2) {
+          const weekWorkouts = getWeekWorkouts(workout.week);
+          const isLastWorkout = weekWorkouts[weekWorkouts.length - 1].id === workoutId;
+          if (isLastWorkout) {
+            lockNextWeek(workout.week);
+          }
+        }
+      }
+      
+      return;
+    }
+    
+    // LÓGICA PARA INICIANTE E AVANÇADO (original)
+    if (!workout.completed) {
+      if (!canCheckWorkout(workoutId)) {
+        setShowBlockedMessage(true);
+        setTimeout(() => setShowBlockedMessage(false), 3000);
+        return;
+      }
+      
+      setDailyWorkouts(prev => prev.map(w => 
+        w.id === workoutId ? { ...w, completed: true } : w
+      ));
+      
+      const weekWorkouts = getWeekWorkouts(workout.week);
+      const isLastWorkout = weekWorkouts[weekWorkouts.length - 1].id === workoutId;
+      
+      if (isLastWorkout) {
+        setTimeout(() => {
+          const completedCount = weekWorkouts.length;
+          const totalTime = weekWorkouts.reduce((acc, w) => {
+            const time = parseInt(w.duration.match(/\d+/)?.[0] || "0");
+            return acc + time;
+          }, 0);
+          
+          const workoutTypes = weekWorkouts.map(w => w.title);
+          
+          const summary: WeeklySummary = {
+            weekNumber: workout.week,
+            completedWorkouts: completedCount,
+            totalTime,
+            workoutTypes
+          };
+          
+          setCurrentWeeklySummary(summary);
+          setShowWeeklySummary(true);
+          
+          unlockNextWeek(workout.week);
+          checkLevelCompletion();
+        }, 300);
+      }
+    } 
+    else {
+      if (!canUncheckWorkout(workoutId)) {
+        setShowBlockedMessage(true);
+        setTimeout(() => setShowBlockedMessage(false), 3000);
+        return;
+      }
+      
+      setDailyWorkouts(prev => prev.map(w => 
+        w.id === workoutId ? { ...w, completed: false } : w
+      ));
+      
+      const weekWorkouts = getWeekWorkouts(workout.week);
+      const isLastWorkout = weekWorkouts[weekWorkouts.length - 1].id === workoutId;
+      
+      if (isLastWorkout) {
+        lockNextWeek(workout.week);
+      }
+    }
   };
 
   const formatTime = (seconds: number) => {
@@ -811,24 +1075,20 @@ export default function CanicrossApp() {
     ? runs.reduce((acc, run) => acc + run.pace, 0) / runs.length 
     : 0;
 
-  // Verificar se o nível atual está completo (todos os treinos concluídos)
+  // Verificar se o nível atual está completo
   const isCurrentLevelComplete = () => {
-    const currentLevelWorkouts = dailyWorkouts.filter(w => w.difficulty === userLevel);
+    const currentLevelWorkouts = dailyWorkouts.filter(w => w.difficulty === userLevel && w.category !== "REST");
+    
+    if (userLevel === "Intermediário") {
+      return currentLevelWorkouts.every(w => w.completedWeek1 && w.completedWeek2);
+    }
+    
     return currentLevelWorkouts.every(w => w.completed);
   };
 
   // Verificar se um nível está desbloqueado
   const isLevelUnlocked = (level: "Iniciante" | "Intermediário" | "Avançado") => {
-    if (level === "Iniciante") return true;
-    if (level === "Intermediário") {
-      const inicianteWorkouts = dailyWorkouts.filter(w => w.difficulty === "Iniciante");
-      return inicianteWorkouts.every(w => w.completed);
-    }
-    if (level === "Avançado") {
-      const intermediarioWorkouts = dailyWorkouts.filter(w => w.difficulty === "Intermediário");
-      return intermediarioWorkouts.every(w => w.completed);
-    }
-    return false;
+    return unlockedLevels.includes(level);
   };
 
   const filteredWorkouts = dailyWorkouts.filter(workout => workout.difficulty === userLevel);
@@ -867,6 +1127,112 @@ export default function CanicrossApp() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-cyan-50 to-sky-50">
+      {/* Blocked Message */}
+      {showBlockedMessage && (
+        <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 animate-in fade-in slide-in-from-top-5">
+          <div className="bg-red-500 text-white px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 border-2 border-red-600">
+            <AlertCircle className="w-6 h-6" />
+            <div className="font-bold">Complete a etapa anterior para continuar evoluindo.</div>
+          </div>
+        </div>
+      )}
+
+      {/* Weekly Summary Dialog */}
+      <Dialog open={showWeeklySummary} onOpenChange={setShowWeeklySummary}>
+        <DialogContent className="sm:max-w-md bg-gradient-to-br from-green-50 to-emerald-50 border-4 border-green-400">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-3 text-2xl font-bold text-green-900">
+              <Trophy className="w-8 h-8 text-green-600" />
+              {currentWeeklySummary?.isRepeat ? "Repetição Concluída! 🎉" : `Resumo da Semana ${currentWeeklySummary?.weekNumber} 🎉`}
+            </DialogTitle>
+            <DialogDescription className="text-base text-green-800 mt-4">
+              {currentWeeklySummary && (
+                <div className="space-y-4">
+                  <div className="font-semibold text-lg">
+                    {currentWeeklySummary.isRepeat 
+                      ? `Parabéns! Você completou a segunda rodada dos treinos!`
+                      : `Parabéns! Você concluiu ${currentWeeklySummary.completedWorkouts} treinos essa semana!`
+                    }
+                  </div>
+                  
+                  <div className="bg-white p-4 rounded-lg border-2 border-green-300">
+                    <div className="text-sm text-gray-700 mb-2">
+                      <strong>⏱️ Tempo total:</strong> {currentWeeklySummary.totalTime} minutos
+                    </div>
+                    <div className="text-sm text-gray-700 mb-2">
+                      <strong>🏃 Treinos realizados:</strong>
+                    </div>
+                    <ul className="text-xs text-gray-600 ml-4 space-y-1">
+                      {currentWeeklySummary.workoutTypes.map((type, idx) => (
+                        <li key={idx}>• {type}</li>
+                      ))}
+                    </ul>
+                  </div>
+                  
+                  <div className="text-base font-semibold text-green-900">
+                    Você deu um grande passo na evolução com seu cachorro! 🐕💙
+                  </div>
+                  
+                  {userLevel === "Intermediário" && !currentWeeklySummary.isRepeat && (
+                    <div className="bg-gradient-to-r from-blue-100 to-cyan-100 p-4 rounded-lg border-2 border-blue-400">
+                      <div className="text-sm font-bold text-blue-900 flex items-center gap-2">
+                        <CheckCircle2 className="w-5 h-5" />
+                        Agora repita os mesmos treinos na segunda semana!
+                      </div>
+                    </div>
+                  )}
+                  
+                  {userLevel === "Intermediário" && currentWeeklySummary.isRepeat && (
+                    <div className="bg-gradient-to-r from-green-100 to-emerald-100 p-4 rounded-lg border-2 border-green-400">
+                      <div className="text-sm font-bold text-green-900 flex items-center gap-2">
+                        <CheckCircle2 className="w-5 h-5" />
+                        Bloco completo! Próximo bloco desbloqueado!
+                      </div>
+                    </div>
+                  )}
+                  
+                  {userLevel !== "Intermediário" && currentWeeklySummary.weekNumber < 4 && (
+                    <div className="bg-gradient-to-r from-green-100 to-emerald-100 p-4 rounded-lg border-2 border-green-400">
+                      <div className="text-sm font-bold text-green-900 flex items-center gap-2">
+                        <CheckCircle2 className="w-5 h-5" />
+                        A próxima semana já está liberada!
+                      </div>
+                    </div>
+                  )}
+                  
+                  {isCurrentLevelComplete() && (
+                    <div className="bg-gradient-to-r from-yellow-100 to-amber-100 p-4 rounded-lg border-2 border-yellow-400">
+                      <div className="text-sm font-bold text-yellow-900 flex items-center gap-2">
+                        <Trophy className="w-5 h-5" />
+                        Parabéns! Você concluiu o nível {userLevel}!
+                      </div>
+                      {userLevel === "Iniciante" && (
+                        <div className="text-xs text-yellow-800 mt-2">
+                          O nível Intermediário foi desbloqueado!
+                        </div>
+                      )}
+                      {userLevel === "Intermediário" && (
+                        <div className="text-xs text-yellow-800 mt-2">
+                          O nível Avançado foi desbloqueado!
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-center mt-4">
+            <Button 
+              onClick={() => setShowWeeklySummary(false)}
+              className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold px-8"
+            >
+              Continuar Treinando! 💪
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Header */}
       <header className="bg-gradient-to-r from-blue-500 to-blue-700 text-white shadow-lg sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
@@ -875,7 +1241,7 @@ export default function CanicrossApp() {
               <Dog className="w-8 h-8 sm:w-10 sm:h-10" />
               <div>
                 <h1 className="text-2xl sm:text-3xl font-bold">Stride</h1>
-                <p className="text-xs sm:text-sm text-blue-100">Canicross para Iniciantes</p>
+                <div className="text-xs sm:text-sm text-blue-100">Canicross para Iniciantes</div>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -941,7 +1307,7 @@ export default function CanicrossApp() {
                     </CardHeader>
                     <CardContent>
                       <div className="text-3xl sm:text-4xl font-bold">{totalDistance.toFixed(1)}</div>
-                      <p className="text-blue-100 text-sm mt-1">quilômetros</p>
+                      <div className="text-blue-100 text-sm mt-1">quilômetros</div>
                     </CardContent>
                   </Card>
 
@@ -954,7 +1320,7 @@ export default function CanicrossApp() {
                     </CardHeader>
                     <CardContent>
                       <div className="text-3xl sm:text-4xl font-bold">{totalRuns}</div>
-                      <p className="text-cyan-100 text-sm mt-1">corridas registradas</p>
+                      <div className="text-cyan-100 text-sm mt-1">corridas registradas</div>
                     </CardContent>
                   </Card>
 
@@ -967,7 +1333,7 @@ export default function CanicrossApp() {
                     </CardHeader>
                     <CardContent>
                       <div className="text-3xl sm:text-4xl font-bold">{avgPace.toFixed(1)}</div>
-                      <p className="text-sky-100 text-sm mt-1">min/km</p>
+                      <div className="text-sky-100 text-sm mt-1">min/km</div>
                     </CardContent>
                   </Card>
                 </div>
@@ -979,15 +1345,15 @@ export default function CanicrossApp() {
                       <div>
                         <CardTitle className="flex items-center gap-2 text-blue-900">
                           <Dumbbell className="w-6 h-6 text-blue-600" />
-                          Treinos Diários - Programa Completo
+                          Treinos Semanais - Programa Estruturado
                         </CardTitle>
-                        <CardDescription>Sistema de treino estruturado por semanas e categorias (A, B, C, D)</CardDescription>
+                        <CardDescription>Sistema de treino com dias de descanso e progressão controlada</CardDescription>
                       </div>
                       <div className="flex gap-2 flex-wrap">
                         <Button
                           size="sm"
                           variant={userLevel === "Iniciante" ? "default" : "outline"}
-                          onClick={() => setUserLevel("Iniciante")}
+                          onClick={() => isLevelUnlocked("Iniciante") && setUserLevel("Iniciante")}
                           disabled={!isLevelUnlocked("Iniciante")}
                           className={`${userLevel === "Iniciante" ? "bg-blue-500 hover:bg-blue-600" : ""} ${!isLevelUnlocked("Iniciante") ? "opacity-50" : ""}`}
                         >
@@ -1018,282 +1384,306 @@ export default function CanicrossApp() {
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    {/* Alerta de progresso */}
-                    {!isCurrentLevelComplete() && (
-                      <div className="p-4 bg-blue-100 border-2 border-blue-300 rounded-xl">
-                        <div className="flex items-center gap-3">
-                          <Target className="w-6 h-6 text-blue-600" />
-                          <div>
-                            <p className="font-bold text-blue-900 text-sm">Complete todos os treinos deste nível!</p>
-                            <p className="text-xs text-blue-700">Os treinos do próximo nível serão liberados após concluir todas as metas da sua categoria atual.</p>
-                          </div>
-                        </div>
-                      </div>
+                    {/* Renderização específica para Intermediário */}
+                    {userLevel === "Intermediário" ? (
+                      <>
+                        {[1, 2].map(blockNum => {
+                          const weekWorkouts = filteredWorkouts.filter(w => w.week === blockNum);
+                          if (weekWorkouts.length === 0) return null;
+
+                          const isUnlocked = isWeekUnlocked(blockNum);
+                          const actualWorkouts = getWeekWorkouts(blockNum);
+
+                          return (
+                            <div key={blockNum} className="space-y-3">
+                              <div className="flex items-center gap-3 mt-6 mb-3">
+                                <div className="h-px bg-indigo-300 flex-1"></div>
+                                <div className="flex items-center gap-3">
+                                  {!isUnlocked && <Lock className="w-5 h-5 text-gray-500" />}
+                                  <h3 className="text-lg font-bold text-indigo-900 flex items-center gap-2">
+                                    <Calendar className="w-5 h-5" />
+                                    Bloco {blockNum} - Semanas {blockNum * 2 - 1} e {blockNum * 2}
+                                  </h3>
+                                </div>
+                                <div className="h-px bg-indigo-300 flex-1"></div>
+                              </div>
+
+                              {!isUnlocked && (
+                                <div className="p-4 bg-gray-100 border-2 border-gray-300 rounded-xl mb-4">
+                                  <div className="flex items-center gap-3">
+                                    <Lock className="w-6 h-6 text-gray-500" />
+                                    <div>
+                                      <div className="font-bold text-gray-700 text-sm">Bloco Bloqueado</div>
+                                      <div className="text-xs text-gray-600">Complete o bloco anterior (ambas as semanas) para desbloquear.</div>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+
+                              {actualWorkouts.map((workout) => {
+                                const canAccessWeek1 = workout.completedWeek1 || canCheckWorkout(workout.id);
+                                const canAccessWeek2 = workout.completedWeek2 || (workout.completedWeek1 && canCheckWorkout(workout.id));
+                                const isBlocked = !isUnlocked;
+                                
+                                return (
+                                  <div 
+                                    key={workout.id}
+                                    className={`p-5 rounded-xl border-2 ${
+                                      workout.completed 
+                                        ? 'bg-green-50 border-green-300' 
+                                        : 'bg-white border-indigo-300'
+                                    }`}
+                                  >
+                                    <div className="flex items-start gap-4">
+                                      <div className={`w-12 h-12 ${
+                                        isBlocked
+                                          ? "bg-gray-400"
+                                          : workout.completed
+                                            ? "bg-green-500"
+                                            : "bg-indigo-500"
+                                      } rounded-lg flex items-center justify-center flex-shrink-0 shadow-md`}>
+                                        {isBlocked ? (
+                                          <Lock className="w-6 h-6 text-white" />
+                                        ) : workout.completed ? (
+                                          <CheckCircle2 className="w-6 h-6 text-white" />
+                                        ) : (
+                                          <span className="text-white font-bold text-lg">{workout.category}</span>
+                                        )}
+                                      </div>
+                                      <div className="flex-1">
+                                        <div className="flex items-center justify-between mb-2">
+                                          <div className="flex items-center gap-2">
+                                            <Badge className="bg-indigo-600 text-white font-bold">
+                                              Treino {workout.category}
+                                            </Badge>
+                                            <h3 className={`font-bold text-lg ${workout.completed ? 'line-through text-gray-500' : 'text-gray-900'}`}>
+                                              {workout.title}
+                                            </h3>
+                                          </div>
+                                          <Badge className="bg-indigo-500 text-white">
+                                            {workout.duration}
+                                          </Badge>
+                                        </div>
+                                        
+                                        <div className={`text-sm font-semibold mb-2 ${workout.completed ? 'text-gray-400' : 'text-indigo-700'}`}>
+                                          🎯 Objetivo: {workout.objective}
+                                        </div>
+                                        
+                                        <div className={`text-sm ${workout.completed ? 'text-gray-400' : 'text-gray-700'} mb-3`}>
+                                          {workout.description}
+                                        </div>
+
+                                        <div className={`text-xs ${workout.completed ? 'text-gray-400' : 'text-gray-600'} space-y-1 mb-3 pl-4`}>
+                                          {workout.details.map((detail, idx) => (
+                                            <div key={idx}>• {detail}</div>
+                                          ))}
+                                        </div>
+
+                                        {/* Checkboxes duplos para Intermediário */}
+                                        <div className="flex items-center gap-4 mt-4">
+                                          <div className="flex items-center gap-2">
+                                            <input
+                                              type="checkbox"
+                                              checked={workout.completedWeek1 || false}
+                                              onChange={() => !isBlocked && toggleWorkoutCompletion(workout.id, 1)}
+                                              disabled={isBlocked || !canAccessWeek1}
+                                              className="w-5 h-5 rounded border-2 border-indigo-400 text-indigo-600 focus:ring-indigo-500 disabled:opacity-50 cursor-pointer"
+                                            />
+                                            <span className="text-sm font-medium text-gray-700">Semana 1</span>
+                                          </div>
+                                          <div className="flex items-center gap-2">
+                                            <input
+                                              type="checkbox"
+                                              checked={workout.completedWeek2 || false}
+                                              onChange={() => !isBlocked && toggleWorkoutCompletion(workout.id, 2)}
+                                              disabled={isBlocked || !canAccessWeek2}
+                                              className="w-5 h-5 rounded border-2 border-indigo-400 text-indigo-600 focus:ring-indigo-500 disabled:opacity-50 cursor-pointer"
+                                            />
+                                            <span className="text-sm font-medium text-gray-700">Semana 2</span>
+                                          </div>
+                                        </div>
+
+                                        <div className="flex items-center gap-2 mt-3">
+                                          <Badge variant="outline" className={workout.completed ? 'border-green-500 text-green-700' : ''}>
+                                            {workout.difficulty}
+                                          </Badge>
+                                          {workout.completed && (
+                                            <div className="flex items-center gap-1">
+                                              <span className="text-2xl">🏅</span>
+                                              <span className="text-xs text-green-600 font-semibold">Concluído (2x)</span>
+                                            </div>
+                                          )}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          );
+                        })}
+                      </>
+                    ) : (
+                      /* Renderização para Iniciante e Avançado (original) */
+                      <>
+                        {[1, 2, 3, 4].map(weekNum => {
+                          const weekWorkouts = filteredWorkouts.filter(w => w.week === weekNum);
+                          if (weekWorkouts.length === 0) return null;
+
+                          const isUnlocked = isWeekUnlocked(weekNum);
+                          const weekInfo = weekProgress.find(w => w.weekNumber === weekNum);
+                          const actualWorkouts = getWeekWorkouts(weekNum);
+
+                          return (
+                            <div key={weekNum} className="space-y-3">
+                              <div className="flex items-center gap-3 mt-6 mb-3">
+                                <div className="h-px bg-blue-300 flex-1"></div>
+                                <div className="flex items-center gap-3">
+                                  {!isUnlocked && <Lock className="w-5 h-5 text-gray-500" />}
+                                  <h3 className="text-lg font-bold text-blue-900 flex items-center gap-2">
+                                    <Calendar className="w-5 h-5" />
+                                    Semana {weekNum}
+                                    {weekNum === 1 && " - Adaptação e Comandos"}
+                                    {weekNum === 2 && " - Introdução à Tração"}
+                                    {weekNum === 3 && " - Resistência e Ritmo"}
+                                    {weekNum === 4 && " - Consolidando o Canicross"}
+                                  </h3>
+                                  {weekInfo && (
+                                    <Badge className={isUnlocked ? "bg-green-500" : "bg-gray-400"}>
+                                      {actualWorkouts.filter(w => w.completed).length}/{actualWorkouts.length}
+                                    </Badge>
+                                  )}
+                                </div>
+                                <div className="h-px bg-blue-300 flex-1"></div>
+                              </div>
+
+                              {!isUnlocked && (
+                                <div className="p-4 bg-gray-100 border-2 border-gray-300 rounded-xl mb-4">
+                                  <div className="flex items-center gap-3">
+                                    <Lock className="w-6 h-6 text-gray-500" />
+                                    <div>
+                                      <div className="font-bold text-gray-700 text-sm">Semana Bloqueada</div>
+                                      <div className="text-xs text-gray-600">Complete todos os treinos da semana anterior para desbloquear.</div>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+
+                              {weekWorkouts.map((workout) => {
+                                const canAccess = workout.category === "REST" ? false : (
+                                  workout.completed || canCheckWorkout(workout.id)
+                                );
+                                const isBlocked = !isUnlocked || (!canAccess && workout.category !== "REST");
+                                
+                                return (
+                                  <div 
+                                    key={workout.id}
+                                    className={`p-5 rounded-xl border-2 ${
+                                      workout.category === "REST" 
+                                        ? "bg-gradient-to-r from-amber-50 to-orange-50 border-amber-300" 
+                                        : workout.completed 
+                                          ? 'bg-green-50 border-green-300' 
+                                          : canAccess
+                                            ? 'bg-white border-blue-300 hover:shadow-lg transition-all cursor-pointer'
+                                            : 'bg-gray-50 border-gray-300 opacity-60'
+                                    }`}
+                                    onClick={() => !isBlocked && workout.category !== "REST" && toggleWorkoutCompletion(workout.id)}
+                                  >
+                                    <div className="flex items-start gap-4">
+                                      <div className={`w-12 h-12 ${
+                                        workout.category === "REST" 
+                                          ? "bg-gradient-to-br from-amber-400 to-orange-500" 
+                                          : isBlocked
+                                            ? "bg-gray-400"
+                                            : getLevelColor(workout.difficulty)
+                                      } rounded-lg flex items-center justify-center flex-shrink-0 shadow-md`}>
+                                        {workout.category === "REST" ? (
+                                          <Coffee className="w-6 h-6 text-white" />
+                                        ) : isBlocked ? (
+                                          <Lock className="w-6 h-6 text-white" />
+                                        ) : workout.completed ? (
+                                          <CheckCircle2 className="w-6 h-6 text-white" />
+                                        ) : (
+                                          <span className="text-white font-bold text-lg">{workout.category}</span>
+                                        )}
+                                      </div>
+                                      <div className="flex-1">
+                                        <div className="flex items-center justify-between mb-2">
+                                          <div className="flex items-center gap-2">
+                                            {workout.category === "REST" ? (
+                                              <Badge className="bg-amber-600 text-white font-bold">
+                                                Descanso
+                                              </Badge>
+                                            ) : (
+                                              <Badge className="bg-blue-600 text-white font-bold">
+                                                Treino {workout.category}
+                                              </Badge>
+                                            )}
+                                            <h3 className={`font-bold text-lg ${workout.completed ? 'line-through text-gray-500' : 'text-gray-900'}`}>
+                                              {workout.title}
+                                            </h3>
+                                          </div>
+                                          <Badge className={`${
+                                            workout.category === "REST" 
+                                              ? "bg-amber-500" 
+                                              : getLevelColor(workout.difficulty)
+                                          } text-white`}>
+                                            {workout.duration}
+                                          </Badge>
+                                        </div>
+                                        
+                                        {workout.category === "REST" ? (
+                                          <div className="bg-amber-100 p-3 rounded-lg border border-amber-300 mb-3">
+                                            <div className="text-sm font-semibold text-amber-900 flex items-center gap-2">
+                                              <Coffee className="w-4 h-4" />
+                                              Dia de descanso – recuperação é parte do treino
+                                            </div>
+                                          </div>
+                                        ) : (
+                                          <>
+                                            <div className={`text-sm font-semibold mb-2 ${workout.completed ? 'text-gray-400' : 'text-blue-700'}`}>
+                                              🎯 Objetivo: {workout.objective}
+                                            </div>
+                                            
+                                            <div className={`text-sm ${workout.completed ? 'text-gray-400' : 'text-gray-700'} mb-3`}>
+                                              {workout.description}
+                                            </div>
+
+                                            <div className={`text-xs ${workout.completed ? 'text-gray-400' : 'text-gray-600'} space-y-1 mb-3 pl-4`}>
+                                              {workout.details.map((detail, idx) => (
+                                                <div key={idx}>• {detail}</div>
+                                              ))}
+                                            </div>
+                                          </>
+                                        )}
+
+                                        <div className="flex items-center gap-2">
+                                          <Badge variant="outline" className={workout.completed ? 'border-green-500 text-green-700' : ''}>
+                                            {workout.difficulty}
+                                          </Badge>
+                                          {workout.completed && workout.category !== "REST" && (
+                                            <div className="flex items-center gap-1">
+                                              <span className="text-2xl">🏅</span>
+                                              <span className="text-xs text-green-600 font-semibold">Concluído</span>
+                                            </div>
+                                          )}
+                                          {isBlocked && workout.category !== "REST" && (
+                                            <div className="flex items-center gap-1">
+                                              <Lock className="w-4 h-4 text-gray-500" />
+                                              <span className="text-xs text-gray-500 font-semibold">Bloqueado</span>
+                                            </div>
+                                          )}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          );
+                        })}
+                      </>
                     )}
-
-                    {isCurrentLevelComplete() && userLevel !== "Avançado" && (
-                      <div className="p-4 bg-green-100 border-2 border-green-400 rounded-xl">
-                        <div className="flex items-center gap-3">
-                          <Trophy className="w-6 h-6 text-green-600" />
-                          <div>
-                            <p className="font-bold text-green-900 text-sm">🎉 Parabéns! Nível completo!</p>
-                            <p className="text-xs text-green-700">Você desbloqueou o próximo nível. Clique no botão acima para avançar!</p>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Agrupamento por semana */}
-                    {userLevel === "Iniciante" && [1, 2, 3, 4].map(weekNum => {
-                      const weekWorkouts = filteredWorkouts.filter(w => w.week === weekNum);
-                      if (weekWorkouts.length === 0) return null;
-
-                      return (
-                        <div key={weekNum} className="space-y-3">
-                          <div className="flex items-center gap-3 mt-6 mb-3">
-                            <div className="h-px bg-blue-300 flex-1"></div>
-                            <h3 className="text-lg font-bold text-blue-900 flex items-center gap-2">
-                              <Clock className="w-5 h-5" />
-                              Semana {weekNum}
-                              {weekNum === 1 && " - Adaptação e Comandos"}
-                              {weekNum === 2 && " - Introdução à Tração"}
-                              {weekNum === 3 && " - Resistência e Ritmo"}
-                              {weekNum === 4 && " - Consolidando o Canicross"}
-                            </h3>
-                            <div className="h-px bg-blue-300 flex-1"></div>
-                          </div>
-
-                          {weekWorkouts.map((workout) => (
-                            <div 
-                              key={workout.id}
-                              className={`p-5 rounded-xl border-2 ${getLevelBorderColor(workout.difficulty)} ${
-                                workout.completed ? 'bg-green-50' : 'bg-white'
-                              } hover:shadow-lg transition-all cursor-pointer`}
-                              onClick={() => toggleWorkoutCompletion(workout.id)}
-                            >
-                              <div className="flex items-start gap-4">
-                                <div className={`w-12 h-12 ${getLevelColor(workout.difficulty)} rounded-lg flex items-center justify-center flex-shrink-0 shadow-md`}>
-                                  {workout.completed ? (
-                                    <CheckCircle2 className="w-6 h-6 text-white" />
-                                  ) : (
-                                    <span className="text-white font-bold text-lg">{workout.category}</span>
-                                  )}
-                                </div>
-                                <div className="flex-1">
-                                  <div className="flex items-center justify-between mb-2">
-                                    <div className="flex items-center gap-2">
-                                      <Badge className="bg-blue-600 text-white font-bold">
-                                        Treino {workout.category}
-                                      </Badge>
-                                      <h3 className={`font-bold text-lg ${workout.completed ? 'line-through text-gray-500' : 'text-gray-900'}`}>
-                                        {workout.title}
-                                      </h3>
-                                    </div>
-                                    <Badge className={`${getLevelColor(workout.difficulty)} text-white`}>
-                                      {workout.duration}
-                                    </Badge>
-                                  </div>
-                                  
-                                  <p className={`text-sm font-semibold mb-2 ${workout.completed ? 'text-gray-400' : 'text-blue-700'}`}>
-                                    🎯 Objetivo: {workout.objetivo}
-                                  </p>
-                                  
-                                  <p className={`text-sm ${workout.completed ? 'text-gray-400' : 'text-gray-700'} mb-3`}>
-                                    {workout.description}
-                                  </p>
-
-                                  <div className={`text-xs ${workout.completed ? 'text-gray-400' : 'text-gray-600'} space-y-1 mb-3 pl-4`}>
-                                    {workout.details.map((detail, idx) => (
-                                      <p key={idx}>• {detail}</p>
-                                    ))}
-                                  </div>
-
-                                  <div className="flex items-center gap-2">
-                                    <Badge variant="outline" className={workout.completed ? 'border-green-500 text-green-700' : ''}>
-                                      {workout.difficulty}
-                                    </Badge>
-                                    {workout.completed && (
-                                      <div className="flex items-center gap-1">
-                                        <span className="text-2xl">🏅</span>
-                                        <span className="text-xs text-green-600 font-semibold">Concluído</span>
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      );
-                    })}
-
-                    {userLevel === "Intermediário" && [1, 3, 5].map(weekNum => {
-                      const weekWorkouts = filteredWorkouts.filter(w => w.week === weekNum || (weekNum === 1 && w.week === 2) || (weekNum === 3 && w.week === 4) || (weekNum === 5 && w.week === 6));
-                      if (weekWorkouts.length === 0) return null;
-
-                      let weekTitle = "";
-                      if (weekNum === 1) weekTitle = "Semanas 1 e 2 - Construção de Ritmo e Força";
-                      if (weekNum === 3) weekTitle = "Semanas 3 e 4 - Velocidade, Técnica e Terreno";
-                      if (weekNum === 5) weekTitle = "Semanas 5 e 6 - Consolidação + Intensidade";
-
-                      return (
-                        <div key={weekNum} className="space-y-3">
-                          <div className="flex items-center gap-3 mt-6 mb-3">
-                            <div className="h-px bg-indigo-300 flex-1"></div>
-                            <h3 className="text-lg font-bold text-indigo-900 flex items-center gap-2">
-                              <Clock className="w-5 h-5" />
-                              {weekTitle}
-                            </h3>
-                            <div className="h-px bg-indigo-300 flex-1"></div>
-                          </div>
-
-                          {weekWorkouts.map((workout) => (
-                            <div 
-                              key={workout.id}
-                              className={`p-5 rounded-xl border-2 ${getLevelBorderColor(workout.difficulty)} ${
-                                workout.completed ? 'bg-green-50' : 'bg-white'
-                              } hover:shadow-lg transition-all cursor-pointer`}
-                              onClick={() => toggleWorkoutCompletion(workout.id)}
-                            >
-                              <div className="flex items-start gap-4">
-                                <div className={`w-12 h-12 ${getLevelColor(workout.difficulty)} rounded-lg flex items-center justify-center flex-shrink-0 shadow-md`}>
-                                  {workout.completed ? (
-                                    <CheckCircle2 className="w-6 h-6 text-white" />
-                                  ) : (
-                                    <span className="text-white font-bold text-lg">{workout.category}</span>
-                                  )}
-                                </div>
-                                <div className="flex-1">
-                                  <div className="flex items-center justify-between mb-2">
-                                    <div className="flex items-center gap-2">
-                                      <Badge className="bg-indigo-600 text-white font-bold">
-                                        Treino {workout.category}
-                                      </Badge>
-                                      <h3 className={`font-bold text-lg ${workout.completed ? 'line-through text-gray-500' : 'text-gray-900'}`}>
-                                        {workout.title}
-                                      </h3>
-                                    </div>
-                                    <Badge className={`${getLevelColor(workout.difficulty)} text-white`}>
-                                      {workout.duration}
-                                    </Badge>
-                                  </div>
-                                  
-                                  <p className={`text-sm font-semibold mb-2 ${workout.completed ? 'text-gray-400' : 'text-indigo-700'}`}>
-                                    🎯 Objetivo: {workout.objetivo}
-                                  </p>
-                                  
-                                  <p className={`text-sm ${workout.completed ? 'text-gray-400' : 'text-gray-700'} mb-3`}>
-                                    {workout.description}
-                                  </p>
-
-                                  <div className={`text-xs ${workout.completed ? 'text-gray-400' : 'text-gray-600'} space-y-1 mb-3 pl-4`}>
-                                    {workout.details.map((detail, idx) => (
-                                      <p key={idx}>• {detail}</p>
-                                    ))}
-                                  </div>
-
-                                  <div className="flex items-center gap-2">
-                                    <Badge variant="outline" className={workout.completed ? 'border-green-500 text-green-700' : ''}>
-                                      {workout.difficulty}
-                                    </Badge>
-                                    {workout.completed && (
-                                      <div className="flex items-center gap-1">
-                                        <span className="text-2xl">🏅</span>
-                                        <span className="text-xs text-green-600 font-semibold">Concluído</span>
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      );
-                    })}
-
-                    {userLevel === "Avançado" && [1, 3, 5].map(weekNum => {
-                      const weekWorkouts = filteredWorkouts.filter(w => w.week === weekNum || (weekNum === 1 && w.week === 2) || (weekNum === 3 && w.week === 4) || (weekNum === 5 && w.week === 6));
-                      if (weekWorkouts.length === 0) return null;
-
-                      let weekTitle = "";
-                      if (weekNum === 1) weekTitle = "Semanas 1 e 2 - Intensidade e Técnica";
-                      if (weekNum === 3) weekTitle = "Semanas 3 e 4 - Força Explosiva + Velocidade";
-                      if (weekNum === 5) weekTitle = "Semanas 5 e 6 - Pico de Performance + Prova";
-
-                      return (
-                        <div key={weekNum} className="space-y-3">
-                          <div className="flex items-center gap-3 mt-6 mb-3">
-                            <div className="h-px bg-orange-300 flex-1"></div>
-                            <h3 className="text-lg font-bold text-orange-900 flex items-center gap-2">
-                              <Clock className="w-5 h-5" />
-                              {weekTitle}
-                            </h3>
-                            <div className="h-px bg-orange-300 flex-1"></div>
-                          </div>
-
-                          {weekWorkouts.map((workout) => (
-                            <div 
-                              key={workout.id}
-                              className={`p-5 rounded-xl border-2 ${getLevelBorderColor(workout.difficulty)} ${
-                                workout.completed ? 'bg-green-50' : 'bg-white'
-                              } hover:shadow-lg transition-all cursor-pointer`}
-                              onClick={() => toggleWorkoutCompletion(workout.id)}
-                            >
-                              <div className="flex items-start gap-4">
-                                <div className={`w-12 h-12 ${getLevelColor(workout.difficulty)} rounded-lg flex items-center justify-center flex-shrink-0 shadow-md`}>
-                                  {workout.completed ? (
-                                    <CheckCircle2 className="w-6 h-6 text-white" />
-                                  ) : (
-                                    <span className="text-white font-bold text-lg">{workout.category}</span>
-                                  )}
-                                </div>
-                                <div className="flex-1">
-                                  <div className="flex items-center justify-between mb-2">
-                                    <div className="flex items-center gap-2">
-                                      <Badge className="bg-orange-600 text-white font-bold">
-                                        Treino {workout.category}
-                                      </Badge>
-                                      <h3 className={`font-bold text-lg ${workout.completed ? 'line-through text-gray-500' : 'text-gray-900'}`}>
-                                        {workout.title}
-                                      </h3>
-                                    </div>
-                                    <Badge className={`${getLevelColor(workout.difficulty)} text-white`}>
-                                      {workout.duration}
-                                    </Badge>
-                                  </div>
-                                  
-                                  <p className={`text-sm font-semibold mb-2 ${workout.completed ? 'text-gray-400' : 'text-orange-700'}`}>
-                                    🎯 Objetivo: {workout.objetivo}
-                                  </p>
-                                  
-                                  <p className={`text-sm ${workout.completed ? 'text-gray-400' : 'text-gray-700'} mb-3`}>
-                                    {workout.description}
-                                  </p>
-
-                                  <div className={`text-xs ${workout.completed ? 'text-gray-400' : 'text-gray-600'} space-y-1 mb-3 pl-4`}>
-                                    {workout.details.map((detail, idx) => (
-                                      <p key={idx}>• {detail}</p>
-                                    ))}
-                                  </div>
-
-                                  <div className="flex items-center gap-2">
-                                    <Badge variant="outline" className={workout.completed ? 'border-green-500 text-green-700' : ''}>
-                                      {workout.difficulty}
-                                    </Badge>
-                                    {workout.completed && (
-                                      <div className="flex items-center gap-1">
-                                        <span className="text-2xl">🏅</span>
-                                        <span className="text-xs text-green-600 font-semibold">Concluído</span>
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      );
-                    })}
 
                     {/* Mensagem final após completar todas as semanas */}
                     {isCurrentLevelComplete() && (
@@ -1301,19 +1691,14 @@ export default function CanicrossApp() {
                         <div className="flex items-center gap-4">
                           <Trophy className="w-12 h-12 text-green-600" />
                           <div>
-                            <p className="font-bold text-green-900 text-lg">🎉 Parabéns! Programa {userLevel} Completo!</p>
-                            <p className="text-sm text-green-700 mt-1">
-                              Após o término de todos esses treinos com maestria, você estará apto a seguir no próximo nível!
-                            </p>
+                            <div className="font-bold text-green-900 text-lg">🎉 Parabéns! Programa {userLevel} Completo!</div>
+                            <div className="text-sm text-green-700 mt-1">
+                              {userLevel === "Iniciante" && "O nível Intermediário foi desbloqueado! Continue evoluindo."}
+                              {userLevel === "Intermediário" && "O nível Avançado foi desbloqueado! Você está quase lá!"}
+                              {userLevel === "Avançado" && "Você dominou o Canicross! Continue treinando para manter a forma."}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    )}
-                    
-                    {filteredWorkouts.length === 0 && (
-                      <div className="text-center py-8 text-gray-500">
-                        <Dumbbell className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                        <p>Nenhum treino disponível para este nível.</p>
                       </div>
                     )}
                   </CardContent>
@@ -1360,10 +1745,10 @@ export default function CanicrossApp() {
                           />
                         </div>
                         {goal.completed && (
-                          <p className="text-xs text-green-600 font-semibold flex items-center gap-1">
+                          <div className="text-xs text-green-600 font-semibold flex items-center gap-1">
                             <CheckCircle2 className="w-3 h-3" />
                             Meta alcançada! Continue assim!
-                          </p>
+                          </div>
                         )}
                       </div>
                     ))}
@@ -1383,8 +1768,8 @@ export default function CanicrossApp() {
                     {runs.length === 0 ? (
                       <div className="text-center py-8 text-gray-500">
                         <Activity className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                        <p>Nenhuma corrida registrada ainda.</p>
-                        <p className="text-sm mt-1">Comece sua primeira corrida na aba "Correr"!</p>
+                        <div>Nenhuma corrida registrada ainda.</div>
+                        <div className="text-sm mt-1">Comece sua primeira corrida na aba &quot;Correr&quot;!</div>
                       </div>
                     ) : (
                       <div className="space-y-3">
@@ -1398,17 +1783,17 @@ export default function CanicrossApp() {
                                 <Dog className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                               </div>
                               <div>
-                                <p className="font-semibold text-sm sm:text-base">
+                                <div className="font-semibold text-sm sm:text-base">
                                   {run.distance.toFixed(2)} km
-                                </p>
-                                <p className="text-xs sm:text-sm text-gray-600">
+                                </div>
+                                <div className="text-xs sm:text-sm text-gray-600">
                                   {new Date(run.date).toLocaleDateString('pt-BR')}
-                                </p>
+                                </div>
                               </div>
                             </div>
                             <div className="text-right">
-                              <p className="text-sm font-medium">{formatDuration(run.duration)}</p>
-                              <p className="text-xs text-gray-600">{run.pace.toFixed(1)} min/km</p>
+                              <div className="text-sm font-medium">{formatDuration(run.duration)}</div>
+                              <div className="text-xs text-gray-600">{run.pace.toFixed(1)} min/km</div>
                             </div>
                           </div>
                         ))}
@@ -1435,17 +1820,17 @@ export default function CanicrossApp() {
                     <div className="grid grid-cols-2 gap-4">
                       <div className="bg-white p-6 rounded-xl shadow-md border-2 border-blue-200 text-center">
                         <Clock className="w-8 h-8 mx-auto mb-2 text-blue-600" />
-                        <p className="text-sm text-gray-600 mb-1">Tempo</p>
-                        <p className="text-2xl sm:text-3xl font-bold text-blue-900">
+                        <div className="text-sm text-gray-600 mb-1">Tempo</div>
+                        <div className="text-2xl sm:text-3xl font-bold text-blue-900">
                           {formatTime(currentRunTime)}
-                        </p>
+                        </div>
                       </div>
                       <div className="bg-white p-6 rounded-xl shadow-md border-2 border-cyan-200 text-center">
                         <MapPin className="w-8 h-8 mx-auto mb-2 text-cyan-600" />
-                        <p className="text-sm text-gray-600 mb-1">Distância</p>
-                        <p className="text-2xl sm:text-3xl font-bold text-cyan-900">
+                        <div className="text-sm text-gray-600 mb-1">Distância</div>
+                        <div className="text-2xl sm:text-3xl font-bold text-cyan-900">
                           {currentRunDistance.toFixed(2)} km
-                        </p>
+                        </div>
                       </div>
                     </div>
 
@@ -1483,9 +1868,9 @@ export default function CanicrossApp() {
 
                     {isRunning && (
                       <div className="bg-gradient-to-r from-blue-100 to-cyan-100 p-4 rounded-lg border-2 border-blue-300">
-                        <p className="text-center text-sm font-medium text-blue-900">
+                        <div className="text-center text-sm font-medium text-blue-900">
                           {isPaused ? "⏸️ Corrida pausada" : "🏃 Corrida em andamento..."}
-                        </p>
+                        </div>
                       </div>
                     )}
                   </CardContent>
@@ -1504,19 +1889,19 @@ export default function CanicrossApp() {
                       <div className="w-8 h-8 bg-sky-100 rounded-full flex items-center justify-center flex-shrink-0">
                         <span className="text-sky-700 font-bold">1</span>
                       </div>
-                      <p className="text-sm">Mantenha água disponível para você e seu cão</p>
+                      <div className="text-sm">Mantenha água disponível para você e seu cão</div>
                     </div>
                     <div className="flex items-start gap-3 p-3 bg-white rounded-lg border border-sky-200">
                       <div className="w-8 h-8 bg-sky-100 rounded-full flex items-center justify-center flex-shrink-0">
                         <span className="text-sky-700 font-bold">2</span>
                       </div>
-                      <p className="text-sm">Comece com distâncias curtas e aumente gradualmente</p>
+                      <div className="text-sm">Respeite os dias de descanso - recuperação é essencial</div>
                     </div>
                     <div className="flex items-start gap-3 p-3 bg-white rounded-lg border border-sky-200">
                       <div className="w-8 h-8 bg-sky-100 rounded-full flex items-center justify-center flex-shrink-0">
                         <span className="text-sky-700 font-bold">3</span>
                       </div>
-                      <p className="text-sm">Observe os sinais de cansaço do seu cão</p>
+                      <div className="text-sm">Observe os sinais de cansaço do seu cão</div>
                     </div>
                   </CardContent>
                 </Card>
@@ -1546,10 +1931,9 @@ export default function CanicrossApp() {
                         </div>
                         <div className="flex-1">
                           <h3 className="font-bold text-lg mb-2 text-blue-900">Escolhendo o Equipamento Certo</h3>
-                          <p className="text-sm text-gray-700 mb-3">
-                            Aprenda sobre coleiras, cintos e linhas de tração adequadas para Canicross. 
-                            O equipamento correto garante segurança e conforto para você e seu cão.
-                          </p>
+                          <div className="text-sm text-gray-700 mb-3">
+                            Aprenda sobre coleiras, cintos e linhas de tração adequadas para Canicross. O equipamento correto garante segurança e conforto para você e seu cão.
+                          </div>
                           <Badge className="bg-blue-500 text-white">Essencial</Badge>
                         </div>
                       </div>
@@ -1562,10 +1946,9 @@ export default function CanicrossApp() {
                         </div>
                         <div className="flex-1">
                           <h3 className="font-bold text-lg mb-2 text-cyan-900">Primeiros Passos</h3>
-                          <p className="text-sm text-gray-700 mb-3">
-                            Como começar a treinar com seu cão, comandos básicos e adaptação gradual. 
-                            Construa uma base sólida para evoluir com segurança.
-                          </p>
+                          <div className="text-sm text-gray-700 mb-3">
+                            Como começar a treinar com seu cão, comandos básicos e adaptação gradual. Construa uma base sólida para evoluir com segurança.
+                          </div>
                           <Badge className="bg-cyan-500 text-white">Fundamental</Badge>
                         </div>
                       </div>
@@ -1593,10 +1976,9 @@ export default function CanicrossApp() {
                         </div>
                         <div className="flex-1">
                           <h3 className="font-bold text-lg mb-2 text-indigo-900">Técnicas Avançadas de Corrida</h3>
-                          <p className="text-sm text-gray-700 mb-3">
-                            Aprenda técnicas de respiração, postura avançada e sincronização perfeita com seu cão. 
-                            Melhore seu ritmo e eficiência nas corridas.
-                          </p>
+                          <div className="text-sm text-gray-700 mb-3">
+                            Aprenda técnicas de respiração, postura avançada e sincronização perfeita com seu cão. Melhore seu ritmo e eficiência nas corridas.
+                          </div>
                           <Badge className="bg-indigo-500 text-white">Performance</Badge>
                         </div>
                       </div>
@@ -1609,10 +1991,9 @@ export default function CanicrossApp() {
                         </div>
                         <div className="flex-1">
                           <h3 className="font-bold text-lg mb-2 text-purple-900">Planejamento de Treinos</h3>
-                          <p className="text-sm text-gray-700 mb-3">
-                            Crie planos de treino estruturados, estabeleça metas progressivas e aprenda a 
-                            balancear intensidade com recuperação adequada.
-                          </p>
+                          <div className="text-sm text-gray-700 mb-3">
+                            Crie planos de treino estruturados, estabeleça metas progressivas e aprenda a balancear intensidade com recuperação adequada.
+                          </div>
                           <Badge className="bg-purple-500 text-white">Estratégia</Badge>
                         </div>
                       </div>
@@ -1625,10 +2006,9 @@ export default function CanicrossApp() {
                         </div>
                         <div className="flex-1">
                           <h3 className="font-bold text-lg mb-2 text-teal-900">Nutrição e Hidratação</h3>
-                          <p className="text-sm text-gray-700 mb-3">
-                            Entenda as necessidades nutricionais para atletas caninos, suplementação adequada 
-                            e estratégias de hidratação para treinos intensos.
-                          </p>
+                          <div className="text-sm text-gray-700 mb-3">
+                            Entenda as necessidades nutricionais para atletas caninos, suplementação adequada e estratégias de hidratação para treinos intensos.
+                          </div>
                           <Badge className="bg-teal-500 text-white">Saúde</Badge>
                         </div>
                       </div>
@@ -1661,10 +2041,9 @@ export default function CanicrossApp() {
                         </div>
                         <div className="flex-1">
                           <h3 className="font-bold text-xl mb-2 text-amber-900">Preparação para Competições</h3>
-                          <p className="text-sm text-gray-700 mb-3">
-                            Estratégias de treino pré-competição, periodização avançada, análise de performance 
-                            e técnicas mentais para alcançar o pódio.
-                          </p>
+                          <div className="text-sm text-gray-700 mb-3">
+                            Estratégias de treino pré-competição, periodização avançada, análise de performance e técnicas mentais para alcançar o pódio.
+                          </div>
                           <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white">Competitivo</Badge>
                         </div>
                       </div>
@@ -1677,10 +2056,9 @@ export default function CanicrossApp() {
                         </div>
                         <div className="flex-1">
                           <h3 className="font-bold text-xl mb-2 text-red-900">Análise de Performance</h3>
-                          <p className="text-sm text-gray-700 mb-3">
-                            Use dados e métricas avançadas para otimizar treinos. Análise de ritmo, frequência cardíaca, 
-                            VO2 máx e estratégias de recuperação científica.
-                          </p>
+                          <div className="text-sm text-gray-700 mb-3">
+                            Use dados e métricas avançadas para otimizar treinos. Análise de ritmo, frequência cardíaca, VO2 máx e estratégias de recuperação científica.
+                          </div>
                           <Badge className="bg-gradient-to-r from-red-500 to-rose-500 text-white">Ciência</Badge>
                         </div>
                       </div>
@@ -1693,10 +2071,9 @@ export default function CanicrossApp() {
                         </div>
                         <div className="flex-1">
                           <h3 className="font-bold text-xl mb-2 text-orange-900">Treinamento de Elite</h3>
-                          <p className="text-sm text-gray-700 mb-3">
-                            Técnicas de atletas profissionais, treinos intervalados de alta intensidade (HIIT), 
-                            periodização dupla e tripla, e preparação para ultramaratonas.
-                          </p>
+                          <div className="text-sm text-gray-700 mb-3">
+                            Técnicas de atletas profissionais, treinos intervalados de alta intensidade (HIIT), periodização dupla e tripla, e preparação para ultramaratonas.
+                          </div>
                           <Badge className="bg-gradient-to-r from-orange-500 to-yellow-500 text-white">Pro</Badge>
                         </div>
                       </div>
@@ -1706,8 +2083,8 @@ export default function CanicrossApp() {
                       <div className="flex items-center gap-3">
                         <Trophy className="w-8 h-8 text-amber-600" />
                         <div>
-                          <p className="font-bold text-amber-900">Conquiste o Próximo Nível</p>
-                          <p className="text-sm text-amber-800">Continue evoluindo e alcance a excelência no Canicross!</p>
+                          <div className="font-bold text-amber-900">Conquiste o Próximo Nível</div>
+                          <div className="text-sm text-amber-800">Continue evoluindo e alcance a excelência no Canicross!</div>
                         </div>
                       </div>
                     </div>
@@ -1750,7 +2127,7 @@ export default function CanicrossApp() {
                                 <h4 className="font-bold text-gray-900">{post.user}</h4>
                                 <span className="text-xs text-gray-500">{post.timestamp}</span>
                               </div>
-                              <p className="text-sm text-gray-700 mb-4">{post.content}</p>
+                              <div className="text-sm text-gray-700 mb-4">{post.content}</div>
                               <div className="flex items-center gap-6">
                                 <button className="flex items-center gap-2 text-sm text-gray-600 hover:text-pink-600 transition-colors">
                                   <Heart className="w-4 h-4" />
@@ -1773,9 +2150,8 @@ export default function CanicrossApp() {
                   </CardContent>
                 </Card>
 
-                {/* Achievements - DESTAQUE MÁXIMO */}
+                {/* Achievements */}
                 <Card className="shadow-2xl border-4 border-yellow-400 bg-gradient-to-br from-yellow-50 via-amber-50 to-orange-50 relative overflow-hidden">
-                  {/* Efeito de brilho animado */}
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-pulse"></div>
                   
                   <CardHeader className="relative z-10">
@@ -1798,7 +2174,6 @@ export default function CanicrossApp() {
                   
                   <CardContent className="relative z-10">
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
-                      {/* Conquista 1 - Desbloqueada */}
                       <div className="flex flex-col items-center p-5 bg-white rounded-2xl border-4 border-yellow-400 shadow-xl hover:scale-110 hover:shadow-2xl transition-all duration-300 cursor-pointer relative">
                         <div className="absolute -top-3 -right-3 w-8 h-8 bg-green-500 rounded-full flex items-center justify-center shadow-lg">
                           <span className="text-white text-xl">✓</span>
@@ -1806,11 +2181,10 @@ export default function CanicrossApp() {
                         <div className="w-20 h-20 bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 rounded-full flex items-center justify-center mb-3 shadow-2xl animate-pulse">
                           <Award className="w-10 h-10 text-white drop-shadow-lg" />
                         </div>
-                        <p className="text-xs text-center font-bold text-gray-900">Primeira Corrida</p>
-                        <p className="text-[10px] text-center text-yellow-700 font-semibold mt-1">🎖️ Desbloqueado!</p>
+                        <div className="text-xs text-center font-bold text-gray-900">Primeira Corrida</div>
+                        <div className="text-[10px] text-center text-yellow-700 font-semibold mt-1">🎖️ Desbloqueado!</div>
                       </div>
 
-                      {/* Conquista 2 - Desbloqueada */}
                       <div className="flex flex-col items-center p-5 bg-white rounded-2xl border-4 border-blue-400 shadow-xl hover:scale-110 hover:shadow-2xl transition-all duration-300 cursor-pointer relative">
                         <div className="absolute -top-3 -right-3 w-8 h-8 bg-green-500 rounded-full flex items-center justify-center shadow-lg">
                           <span className="text-white text-xl">✓</span>
@@ -1818,11 +2192,10 @@ export default function CanicrossApp() {
                         <div className="w-20 h-20 bg-gradient-to-br from-blue-400 via-cyan-500 to-teal-500 rounded-full flex items-center justify-center mb-3 shadow-2xl animate-pulse">
                           <MapPin className="w-10 h-10 text-white drop-shadow-lg" />
                         </div>
-                        <p className="text-xs text-center font-bold text-gray-900">10km Total</p>
-                        <p className="text-[10px] text-center text-blue-700 font-semibold mt-1">🎖️ Desbloqueado!</p>
+                        <div className="text-xs text-center font-bold text-gray-900">10km Total</div>
+                        <div className="text-[10px] text-center text-blue-700 font-semibold mt-1">🎖️ Desbloqueado!</div>
                       </div>
 
-                      {/* Conquista 3 - Desbloqueada */}
                       <div className="flex flex-col items-center p-5 bg-white rounded-2xl border-4 border-green-400 shadow-xl hover:scale-110 hover:shadow-2xl transition-all duration-300 cursor-pointer relative">
                         <div className="absolute -top-3 -right-3 w-8 h-8 bg-green-500 rounded-full flex items-center justify-center shadow-lg">
                           <span className="text-white text-xl">✓</span>
@@ -1830,11 +2203,10 @@ export default function CanicrossApp() {
                         <div className="w-20 h-20 bg-gradient-to-br from-green-400 via-emerald-500 to-teal-600 rounded-full flex items-center justify-center mb-3 shadow-2xl animate-pulse">
                           <Activity className="w-10 h-10 text-white drop-shadow-lg" />
                         </div>
-                        <p className="text-xs text-center font-bold text-gray-900">5 Corridas</p>
-                        <p className="text-[10px] text-center text-green-700 font-semibold mt-1">🎖️ Desbloqueado!</p>
+                        <div className="text-xs text-center font-bold text-gray-900">5 Corridas</div>
+                        <div className="text-[10px] text-center text-green-700 font-semibold mt-1">🎖️ Desbloqueado!</div>
                       </div>
 
-                      {/* Conquista 4 - Bloqueada */}
                       <div className="flex flex-col items-center p-5 bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl border-4 border-gray-300 shadow-lg opacity-60 hover:opacity-80 transition-all duration-300 cursor-pointer relative">
                         <div className="absolute -top-3 -right-3 w-8 h-8 bg-gray-400 rounded-full flex items-center justify-center shadow-lg">
                           <span className="text-white text-xl">🔒</span>
@@ -1842,21 +2214,20 @@ export default function CanicrossApp() {
                         <div className="w-20 h-20 bg-gray-400 rounded-full flex items-center justify-center mb-3 shadow-lg">
                           <Trophy className="w-10 h-10 text-gray-600" />
                         </div>
-                        <p className="text-xs text-center font-bold text-gray-700">50km Total</p>
-                        <p className="text-[10px] text-center text-gray-600 font-semibold mt-1">🔒 Bloqueado</p>
+                        <div className="text-xs text-center font-bold text-gray-700">50km Total</div>
+                        <div className="text-[10px] text-center text-gray-600 font-semibold mt-1">🔒 Bloqueado</div>
                       </div>
                     </div>
 
-                    {/* Barra de progresso geral */}
                     <div className="mt-8 p-6 bg-gradient-to-r from-yellow-100 via-orange-100 to-red-100 rounded-2xl border-2 border-yellow-400 shadow-lg">
                       <div className="flex items-center justify-between mb-3">
                         <span className="text-sm font-bold text-gray-900">Progresso Geral</span>
                         <span className="text-sm font-bold text-yellow-700">3/4 Conquistas</span>
                       </div>
                       <Progress value={75} className="h-4 bg-yellow-200" />
-                      <p className="text-xs text-center text-gray-700 font-semibold mt-3">
+                      <div className="text-xs text-center text-gray-700 font-semibold mt-3">
                         🎯 Continue assim! Você está quase lá!
-                      </p>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
