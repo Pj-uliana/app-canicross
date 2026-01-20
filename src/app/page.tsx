@@ -738,6 +738,32 @@ export default function CanicrossApp() {
     return () => clearInterval(interval);
   }, [isRunning, isPaused]);
 
+  // useEffect para desbloquear próximo nível automaticamente
+  useEffect(() => {
+    const levelWorkouts = dailyWorkouts.filter(
+      w => w.difficulty === userLevel && w.category !== "REST"
+    );
+
+    const allCompleted =
+      userLevel === "Intermediário"
+        ? levelWorkouts.every(w => w.completedWeek1 && w.completedWeek2)
+        : levelWorkouts.every(w => w.completed);
+
+    if (!allCompleted) return;
+
+    if (userLevel === "Iniciante") {
+      setUnlockedLevels(prev =>
+        prev.includes("Intermediário") ? prev : [...prev, "Intermediário"]
+      );
+    }
+
+    if (userLevel === "Intermediário") {
+      setUnlockedLevels(prev =>
+        prev.includes("Avançado") ? prev : [...prev, "Avançado"]
+      );
+    }
+  }, [dailyWorkouts, userLevel]);
+
   const handleQuizComplete = (level: "Iniciante" | "Intermediário" | "Avançado") => {
     setUserLevel(level);
     localStorage.setItem("canicross_level", level);
@@ -880,30 +906,6 @@ export default function CanicrossApp() {
     }));
   };
 
-  // Verificar se completou o nível e desbloquear próximo
-  const checkLevelCompletion = () => {
-    const currentLevelWorkouts = dailyWorkouts.filter(
-      w => w.difficulty === userLevel && w.category !== "REST"
-    );
-    
-    let allCompleted = false;
-    
-    if (userLevel === "Intermediário") {
-      // Para intermediário, verificar se todos os treinos foram feitos 2x
-      allCompleted = currentLevelWorkouts.every(w => w.completedWeek1 && w.completedWeek2);
-    } else {
-      allCompleted = currentLevelWorkouts.every(w => w.completed);
-    }
-    
-    if (allCompleted) {
-      if (userLevel === "Iniciante" && !unlockedLevels.includes("Intermediário")) {
-        setUnlockedLevels([...unlockedLevels, "Intermediário"]);
-      } else if (userLevel === "Intermediário" && !unlockedLevels.includes("Avançado")) {
-        setUnlockedLevels([...unlockedLevels, "Avançado"]);
-      }
-    }
-  };
-
   // Função principal de toggle
   const toggleWorkoutCompletion = (workoutId: string, weekNumber?: 1 | 2) => {
     const workout = dailyWorkouts.find(w => w.id === workoutId);
@@ -967,8 +969,6 @@ export default function CanicrossApp() {
             if (weekNumber === 2) {
               unlockNextWeek(workout.week);
             }
-            
-            checkLevelCompletion();
           }, 300);
         }
       }
@@ -1032,7 +1032,6 @@ export default function CanicrossApp() {
           setShowWeeklySummary(true);
           
           unlockNextWeek(workout.week);
-          checkLevelCompletion();
         }, 300);
       }
     } 
